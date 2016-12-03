@@ -1,0 +1,255 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Team App</title>
+  <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="http://getbootstrap.com/examples/justified-nav/justified-nav.css" rel="stylesheet">
+  <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-2.0.3.min.js"></script>
+  <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+  <style type="text/css">
+    .axis path {
+        fill: none;
+        stroke: #777;
+        shape-rendering: crispEdges;
+    }
+    .axis text {
+        font-family: Lato;
+        font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="row">
+      <div class="col-md-4 col-lg-3">
+        <h3>2016/17</h3>
+        <p id="team" />
+        <ul id="teams" >
+        </ul>
+        <!--<h3>Search by ID</h3>
+        <input type="text" id="teamId" size="5" />
+        <input type="button" value="Search" onclick="find();" />-->
+      </div>
+      <div class="col-md-8 col-lg-9">
+        <svg id="visualisation" width="1100" height="800"></svg>
+      </div>
+    </div>
+  </div>
+  <script>
+    var SOFT_SALARY_CAP = 94143000;
+    var LUXURY_TAX_CAP = 113287000;
+    var HARD_SALARY_CAP = 117287000;
+    var SOFT_SALARY_CAP_SQRT = Math.ceil(Math.sqrt(SOFT_SALARY_CAP));
+    var LUXURY_TAX_CAP_SQRT = Math.ceil(Math.sqrt(LUXURY_TAX_CAP));
+    var HARD_SALARY_CAP_SQRT = Math.ceil(Math.sqrt(HARD_SALARY_CAP));
+
+    var data = [
+      {"Id":1,"Name":"Атланта","TotalSalary":98259771.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
+      {"Id":2,"Name":"Бостон","TotalSalary":93228631.0,"SoftSalaryGap":1207840.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
+      {"Id":3,"Name":"Бруклин","TotalSalary":75318224.0,"SoftSalaryGap":18824776.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
+      {"Id":4,"Name":"Вашингтон","TotalSalary":102460025.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
+      {"Id":5,"Name":"Голден Стейт","TotalSalary":98223008.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
+      {"Id":6,"Name":"Даллас","TotalSalary":109273866.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
+      {"Id":7,"Name":"Денвер","TotalSalary":75794429.0,"SoftSalaryGap":20203638.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
+      {"Id":8,"Name":"Детройт","TotalSalary":107870253.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
+      {"Id":9,"Name":"Индиана","TotalSalary":89841623.0,"SoftSalaryGap":6015996.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
+      {"Id":10,"Name":"Кливленд","TotalSalary":128278485.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":29066163.0},
+      {"Id":11,"Name":"Клипперс","TotalSalary":114740031.0,"SoftSalaryGap":0.0,"HardSalaryGap":2546969.0,"SalaryLuxuryTax":3632578.0},
+      {"Id":12,"Name":"Лейкерс","TotalSalary":99342217.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
+      {"Id":13,"Name":"Майами","TotalSalary":102222110.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
+      {"Id":14,"Name":"Мемфис","TotalSalary":109804109.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
+      {"Id":15,"Name":"Милуоки","TotalSalary":99043671.0,"SoftSalaryGap":0.0,"HardSalaryGap":18243329.0,"SalaryLuxuryTax":0.0},
+      {"Id":16,"Name":"Миннесота","TotalSalary":80711446.0,"SoftSalaryGap":13431554.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
+      {"Id":17,"Name":"Новый Орлеан","TotalSalary":97799631.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
+      {"Id":18,"Name":"Нью-Йорк","TotalSalary":101863602.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
+      {"Id":19,"Name":"Оклахома-Сити","TotalSalary":94054141.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
+      {"Id":20,"Name":"Орландо","TotalSalary":104824360.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
+      {"Id":21,"Name":"Портленд","TotalSalary":113078189.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
+      {"Id":22,"Name":"Сакраменто","TotalSalary":95490324.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
+      {"Id":23,"Name":"Сан-Антонио","TotalSalary":107047345.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
+      {"Id":24,"Name":"Торонто","TotalSalary":105977999.0,"SoftSalaryGap":0.0,"HardSalaryGap":11309001.0,"SalaryLuxuryTax":0.0},
+      {"Id":25,"Name":"Филадельфия","TotalSalary":67510724.0,"SoftSalaryGap":31852155.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
+      {"Id":26,"Name":"Финикс","TotalSalary":80900983.0,"SoftSalaryGap":14292978.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
+      {"Id":27,"Name":"Хьюстон","TotalSalary":98965701.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
+      {"Id":28,"Name":"Чикаго","TotalSalary":96199727.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
+      {"Id":29,"Name":"Шарлотт","TotalSalary":99091302.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
+      {"Id":30,"Name":"Юта","TotalSalary":81817624.0,"SoftSalaryGap":14810504.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0}]
+    var squares = [{ name: 'Мягкий потолок зарплат', value: SOFT_SALARY_CAP_SQRT, color: '#c7e9c0' },
+                   { name: 'Порог налога на роскошь', value: LUXURY_TAX_CAP_SQRT, color: '#e7cb94' },
+                   { name: 'Жёсткий потолок зарплат', value: HARD_SALARY_CAP_SQRT, color: '#e6550d' }];
+    var colors = d3.scale.ordinal()
+      .range(['#e6550d', '#e7cb94', '#c7e9c0']);
+    var rS = [5, 10, 15];
+
+    var vis = d3.select("#visualisation"),
+    WIDTH = 800,
+    HEIGHT = 800,
+    MARGINS = {
+      top: 60,
+      right: 60,
+      bottom: 60,
+      left: 60
+    },
+    xScale = d3.scale.linear().range([MARGINS.left, WIDTH - MARGINS.right]).domain([0, HARD_SALARY_CAP_SQRT]),
+    yScale = d3.scale.linear().range([HEIGHT - MARGINS.top, MARGINS.bottom]).domain([0, HARD_SALARY_CAP_SQRT]),
+    xAxis = d3.svg.axis()
+      .tickFormat("")
+      .scale(xScale),
+    yAxis = d3.svg.axis()
+      .tickFormat("")
+      .scale(yScale)
+      .orient("left");
+    yAxis2 = d3.svg.axis()
+      .tickFormat("")
+      .scale(yScale)
+      .orient("left");
+    vis.append("svg:g")
+      .attr("transform", "translate(0, " + (HEIGHT - MARGINS.bottom) + ")")
+      .attr("class", "axis")
+      .call(xAxis);
+    vis.append("svg:g")
+      .attr("transform", "translate(" + (MARGINS.left) + ", 0)")
+      .attr("class", "axis")
+      .call(yAxis);
+    vis.append("svg:g")
+      .attr("transform", "translate(" + (WIDTH - MARGINS.right) + ", 0)")
+      .attr("class", "axis")
+      .call(yAxis);
+
+    /*var getPathLine = function (salary) {
+      var salaryCap = salary.value;
+      var result = [];
+      var scaledX = Math.ceil(xScale(salaryCap));
+      var scaledY = Math.ceil(yScale(salaryCap));
+      var diff = Math.ceil(yScale(HARD_SALARY_CAP_SQRT) - scaledY);
+      // left upper point
+      result.push({ x: MARGINS.left + 1, y: MARGINS.top - diff });
+      // right upper point
+      result.push({ x: scaledX, y: MARGINS.top - diff });
+      // right lower point
+      result.push({ x: scaledX, y: HEIGHT - MARGINS.top });
+      return result;
+    };
+    var lineGen = d3.svg.line()
+      .x(function (d) { return d.x; })
+      .y(function (d) { return d.y; });
+
+    var squaresPaths = squares.map(getPathLine);
+    var sq = vis.selectAll('.line')
+      .data(squaresPaths);
+    sq.enter()
+      .append('path')
+      .attr({
+        class: 'line',
+        d: lineGen,
+        stroke: function (d, i) { return colors(i); },
+        fill: 'none',
+      })
+      .style("stroke-dasharray", ("5, 7"))
+    sq.exit().remove();*/
+
+    var capsNames = squares.map(function (d) { return d.name });
+    var legend = vis.selectAll(".legend")
+      .data(capsNames.slice().reverse())
+      .enter()
+      .append("g")
+      .attr({
+        class: 'legend',
+        transform: function (d, i) { return "translate(0, " + yScale(squares[2 - i].value) + ")"; }
+      });
+    legend.append("line")
+      .attr({
+        //x1: WIDTH - 20,
+        x1: MARGINS.left,
+        x2: WIDTH + 24,
+        y1: 0,
+        y2: 0,
+        stroke: function (d, i) { return colors(i); },
+      })
+      .style("stroke-dasharray", ("5, 7"));
+    legend.append("text")
+      .attr({
+        x: WIDTH + 34,
+        y: -1,
+        dy: ".35em"
+      })
+      .style("text-anchor", "start")
+      .text(function (d) { return d; });
+
+    //var uri = 'data.js';
+    //$(document).ready(function () {
+      // Send an AJAX request
+      //$.getJSON(uri)
+        //.done(function (data) {
+    var getColorBySalary = function (d) { 
+      if (d.SoftSalaryGap) {
+        return colors(2);
+      } else if (d.HardSalaryGap || !d.SalaryLuxuryTax) {
+        return colors(1);
+      }
+      return colors(0);
+    }
+
+    var teams = d3.select('#teams')
+      .selectAll('li')
+      .data(data, function (di) { return di.Id; });
+
+    teams
+      .enter()
+      .append('li')
+      .html(function (di) { return di.Name; })
+      .on('click', function (d) {
+        var selectedTeam = vis
+          .selectAll('.rect')
+          .data([d], function (di) { return di.Id; });
+        selectedTeam.enter()
+          .append('rect')
+          .attr({
+            x: MARGINS.left + 1,
+            y: function (di) { return xScale(HARD_SALARY_CAP_SQRT) - xScale(Math.sqrt(di.TotalSalary)) + MARGINS.top; },
+            //width: function (di) { return xScale(Math.sqrt(di.TotalSalary)) - MARGINS.left; },
+            width: WIDTH - MARGINS.left - 1 - MARGINS.right,
+            height: function (di) { return xScale(Math.sqrt(di.TotalSalary)) - MARGINS.top; },
+            fill: getColorBySalary,
+            //opacity: 0.4,
+            strokewidth: 3,
+            rx: 10,
+            ry: 10,
+            class: 'rect'
+          });
+        
+        var teamInfo = vis
+          .selectAll('.teamInfo')
+          .data([d], function (di) { return di.Id; });
+        teamInfo.enter()
+          .append('text')
+          .attr({
+            x : 100,
+            y: 100,
+            dy: '.35em',
+            class: 'teamInfo'
+          })
+          .html(formatItem);
+        teamInfo.exit().remove();
+        selectedTeam.exit().remove();
+      });
+    teams.exit().remove();
+    //    });
+    //});
+
+    function formatItem(item) {
+      var result = item.Name + '<br/> Всего зарплат: $' + item.TotalSalary;
+      if (item.SoftSalaryGap) {
+        result += '<br/> До мягкого потолка: $' + item.SoftSalaryGap;
+      }
+      if (item.HardSalaryGap) {
+        result += '<br/> До жёсткого потолка: $' + item.SoftSalaryGap;
+      }
+      if (item.SalaryLuxuryTax) {
+        result += '<br/> Налог на роскошь: $' + item.SoftSalaryGap;
+      }
+      return result;
+    }
+  </script>
+</body>
+</html>
