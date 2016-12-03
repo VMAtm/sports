@@ -21,16 +21,18 @@
 <body>
   <div class="container">
     <div class="row">
-      <div class="col-md-4 col-lg-3">
+      <div class="col-md-3 col-lg-3">
         <h3>2016/17</h3>
         <p id="team" />
-        <ul id="teams" >
-        </ul>
+        <div id="teams" style="width: 300px;">
+
+        </div>
         <!--<h3>Search by ID</h3>
         <input type="text" id="teamId" size="5" />
         <input type="button" value="Search" onclick="find();" />-->
       </div>
-      <div class="col-md-8 col-lg-9">
+      <div class="col-md-1 col-lg-1" >&nbsp;</div>
+      <div class="col-md-8 col-lg-8">
         <svg id="visualisation" width="1100" height="800"></svg>
       </div>
     </div>
@@ -44,36 +46,36 @@
     var HARD_SALARY_CAP_SQRT = Math.ceil(Math.sqrt(HARD_SALARY_CAP));
 
     var data = [
-      {"Id":1,"Name":"Атланта","TotalSalary":98259771.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
-      {"Id":2,"Name":"Бостон","TotalSalary":93228631.0,"SoftSalaryGap":1207840.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
-      {"Id":3,"Name":"Бруклин","TotalSalary":75318224.0,"SoftSalaryGap":18824776.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
-      {"Id":4,"Name":"Вашингтон","TotalSalary":102460025.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
-      {"Id":5,"Name":"Голден Стейт","TotalSalary":98223008.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
-      {"Id":6,"Name":"Даллас","TotalSalary":109273866.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
-      {"Id":7,"Name":"Денвер","TotalSalary":75794429.0,"SoftSalaryGap":20203638.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
-      {"Id":8,"Name":"Детройт","TotalSalary":107870253.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
-      {"Id":9,"Name":"Индиана","TotalSalary":89841623.0,"SoftSalaryGap":6015996.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
-      {"Id":10,"Name":"Кливленд","TotalSalary":128278485.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":29066163.0},
-      {"Id":11,"Name":"Клипперс","TotalSalary":114740031.0,"SoftSalaryGap":0.0,"HardSalaryGap":2546969.0,"SalaryLuxuryTax":3632578.0},
-      {"Id":12,"Name":"Лейкерс","TotalSalary":99342217.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
-      {"Id":13,"Name":"Майами","TotalSalary":102222110.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
-      {"Id":14,"Name":"Мемфис","TotalSalary":109804109.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
-      {"Id":15,"Name":"Милуоки","TotalSalary":99043671.0,"SoftSalaryGap":0.0,"HardSalaryGap":18243329.0,"SalaryLuxuryTax":0.0},
-      {"Id":16,"Name":"Миннесота","TotalSalary":80711446.0,"SoftSalaryGap":13431554.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
-      {"Id":17,"Name":"Новый Орлеан","TotalSalary":97799631.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
-      {"Id":18,"Name":"Нью-Йорк","TotalSalary":101863602.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
-      {"Id":19,"Name":"Оклахома-Сити","TotalSalary":94054141.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
-      {"Id":20,"Name":"Орландо","TotalSalary":104824360.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
-      {"Id":21,"Name":"Портленд","TotalSalary":113078189.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
-      {"Id":22,"Name":"Сакраменто","TotalSalary":95490324.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
-      {"Id":23,"Name":"Сан-Антонио","TotalSalary":107047345.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
-      {"Id":24,"Name":"Торонто","TotalSalary":105977999.0,"SoftSalaryGap":0.0,"HardSalaryGap":11309001.0,"SalaryLuxuryTax":0.0},
-      {"Id":25,"Name":"Филадельфия","TotalSalary":67510724.0,"SoftSalaryGap":31852155.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
-      {"Id":26,"Name":"Финикс","TotalSalary":80900983.0,"SoftSalaryGap":14292978.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
-      {"Id":27,"Name":"Хьюстон","TotalSalary":98965701.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
-      {"Id":28,"Name":"Чикаго","TotalSalary":96199727.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
-      {"Id":29,"Name":"Шарлотт","TotalSalary":99091302.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0},
-      {"Id":30,"Name":"Юта","TotalSalary":81817624.0,"SoftSalaryGap":14810504.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0}]
+      {"Id":1, "Name":"Атланта","TotalSalary":98259771.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0, ImageUrl:"/89/28/36/40/rue83603dc92f.png" },
+      {"Id":2, "Name":"Бостон","TotalSalary":93228631.0,"SoftSalaryGap":1207840.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0, ImageUrl:"/40/70/50/74/ruef17eeef85d.jpeg" },
+      {"Id":3, "Name":"Бруклин","TotalSalary":75318224.0,"SoftSalaryGap":18824776.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0, ImageUrl:"/36/79/50/37/ruee5d06a225a.jpeg" },
+      {"Id":4, "Name":"Вашингтон","TotalSalary":102460025.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0, ImageUrl:"/73/27/41/17/rue23c62e1b86.png" },
+      {"Id":5, "Name":"Голден Стейт","TotalSalary":98223008.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0, ImageUrl:"/21/03/72/39/ruee19454c1c5.jpeg" },
+      {"Id":6, "Name":"Даллас","TotalSalary":109273866.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0, ImageUrl:"/84/53/99/98/rue99d9b653b9.jpeg" },
+      {"Id":7, "Name":"Денвер","TotalSalary":75794429.0,"SoftSalaryGap":20203638.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0, ImageUrl:"/54/85/37/59/rueab83601810.jpeg" },
+      {"Id":8, "Name":"Детройт","TotalSalary":107870253.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0, ImageUrl:"/59/73/18/23/rue7157cba2e6.jpeg" },
+      {"Id":9, "Name":"Индиана","TotalSalary":89841623.0,"SoftSalaryGap":6015996.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0, ImageUrl:"/59/80/61/17/rue7bdfd7e5ec.jpeg" },
+      {"Id":10,"Name":"Кливленд","TotalSalary":128278485.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":29066163.0, ImageUrl:"/73/51/06/23/rued44b47693f.jpeg" },
+      {"Id":11,"Name":"Клипперс","TotalSalary":114740031.0,"SoftSalaryGap":0.0,"HardSalaryGap":2546969.0,"SalaryLuxuryTax":3632578.0, ImageUrl:"/84/59/95/78/rue420ad26b0b.jpg" },
+      {"Id":12,"Name":"Лейкерс","TotalSalary":99342217.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0, ImageUrl:"/54/32/25/91/ruefbe89d53dd.jpeg" },
+      {"Id":13,"Name":"Майами","TotalSalary":102222110.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0, ImageUrl:"/64/39/21/27/rue1e24c170c0.jpeg" },
+      {"Id":14,"Name":"Мемфис","TotalSalary":109804109.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0, ImageUrl:"/38/04/12/51/ruec74728d66b.jpeg" },
+      {"Id":15,"Name":"Милуоки","TotalSalary":99043671.0,"SoftSalaryGap":0.0,"HardSalaryGap":18243329.0,"SalaryLuxuryTax":0.0, ImageUrl:"/74/97/67/94/rue7cb857e29a.jpg" },
+      {"Id":16,"Name":"Миннесота","TotalSalary":80711446.0,"SoftSalaryGap":13431554.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0, ImageUrl:"/78/14/06/41/rue96ade73b55.jpeg" },
+      {"Id":17,"Name":"Новый Орлеан","TotalSalary":97799631.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0, ImageUrl:"/82/99/92/81/rue43bfa487a2.jpg" },
+      {"Id":18,"Name":"Нью-Йорк","TotalSalary":101863602.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0, ImageUrl:"/35/36/24/24/rue5798e93203.jpeg" },
+      {"Id":19,"Name":"Оклахома-Сити","TotalSalary":94054141.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0, ImageUrl:"/29/68/00/26/rue68d93cdfc8.jpeg" },
+      {"Id":20,"Name":"Орландо","TotalSalary":104824360.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0, ImageUrl:"/92/15/66/83/ruec4893a9dc8.jpeg" },
+      {"Id":21,"Name":"Портленд","TotalSalary":113078189.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0, ImageUrl:"/57/30/22/71/rue77818e23b5.jpeg" },
+      {"Id":22,"Name":"Сакраменто","TotalSalary":95490324.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0, ImageUrl:"/51/37/96/18/rue80a282f554.jpg" },
+      {"Id":23,"Name":"Сан-Антонио","TotalSalary":107047345.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0, ImageUrl:"/53/96/70/42/rue549dee887a.jpeg" },
+      {"Id":24,"Name":"Торонто","TotalSalary":105977999.0,"SoftSalaryGap":0.0,"HardSalaryGap":11309001.0,"SalaryLuxuryTax":0.0, ImageUrl:"/91/53/19/50/rue41ff19d3a5.jpg" },
+      {"Id":25,"Name":"Филадельфия","TotalSalary":67510724.0,"SoftSalaryGap":31852155.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0, ImageUrl:"/41/40/70/94/rue4a51d41dce.jpg" },
+      {"Id":26,"Name":"Финикс","TotalSalary":80900983.0,"SoftSalaryGap":14292978.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0, ImageUrl:"/87/30/76/73/rueff3ab4893f.jpeg" },
+      {"Id":27,"Name":"Хьюстон","TotalSalary":98965701.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0, ImageUrl:"/56/46/04/84/rue9c791ff96e.jpeg" },
+      {"Id":28,"Name":"Чикаго","TotalSalary":96199727.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0, ImageUrl:"/47/25/13/64/rue37e090c807.jpeg" },
+      {"Id":29,"Name":"Шарлотт","TotalSalary":99091302.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0, ImageUrl:"/70/84/73/71/rue588ac97201.jpg" },
+      {"Id":30,"Name":"Юта","TotalSalary":81817624.0,"SoftSalaryGap":14810504.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0, ImageUrl:"/74/53/32/58/ruede06eefd17.jpeg" }]
     var squares = [{ name: 'Мягкий потолок зарплат', value: SOFT_SALARY_CAP_SQRT, color: '#c7e9c0' },
                    { name: 'Порог налога на роскошь', value: LUXURY_TAX_CAP_SQRT, color: '#e7cb94' },
                    { name: 'Жёсткий потолок зарплат', value: HARD_SALARY_CAP_SQRT, color: '#e6550d' }];
@@ -191,13 +193,19 @@
     }
 
     var teams = d3.select('#teams')
-      .selectAll('li')
+      .selectAll('img')
       .data(data, function (di) { return di.Id; });
 
     teams
       .enter()
-      .append('li')
-      .html(function (di) { return di.Name; })
+      .append('img')
+      .attr({
+        width: '100px',
+        height: '100px',
+        src: function (di) { return 'http://s5o.ru/storage/simple/ru/edt' + di.ImageUrl; },
+        alt: function (di) { return di.Name; }
+      })
+//       .html(function (di) { return di.Name; })
       .on('click', function (d) {
         var selectedTeam = vis
           .selectAll('.rect')
