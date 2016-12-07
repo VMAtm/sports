@@ -251,19 +251,20 @@
             .selectAll('.player')
             .data(d.Players, function (di) { return di.Name; });
           var total = 0;
+          var teamHeight = xScale(Math.sqrt(d.TotalSalary)) - MARGINS.top; 
           d.Players.forEach(function(di, i) {
-            di.Percents = xScale(Math.sqrt(d.TotalSalary)) * di.Salary / d.TotalSalary;
+            di.Height = Math.ceil(teamHeight * di.Salary / d.TotalSalary);
             di.Start = total;
-            total += di.Percents;
+            total += di.Height;
           });
 
           players.enter()
             .append('rect')
             .attr({
               x: MARGINS.left + 1,
-              y: function (di) { return xScale(HARD_SALARY_CAP_SQRT) - xScale(Math.sqrt(d.TotalSalary)) * di.Salary / d.TotalSalary - di.Start; },
+              y: function (di) { return xScale(HARD_SALARY_CAP_SQRT) - teamHeight * di.Salary / d.TotalSalary - di.Start; },
               width: WIDTH - MARGINS.left - 1 - MARGINS.right,
-              height: function (di) { return di.Percents; },
+              height: function (di) { return di.Height; },
               fill: function(di, i) { return colors(i % 3); },
               class: 'player'
             });
