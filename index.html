@@ -33,7 +33,7 @@
       </div>
       <div class="col-md-1 col-lg-1" >&nbsp;</div>
       <div class="col-md-8 col-lg-8">
-        <svg id="visualisation" width="1100" height="800"></svg>
+        <svg id="visualisation" width="1200" height="800"></svg>
       </div>
     </div>
   </div>
@@ -48,23 +48,24 @@
     var data = [
       {"Id":1, "Name":"Атланта","TotalSalary":99289618.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0, ImageUrl:"/89/28/36/40/rue83603dc92f.png",
        "Players": [{ Name: "Дуайт Ховард", Salary: 23180275, Type: "Normal"},
-                   { Name: "Пол Миллсэп", Salary: 20072033, Type: "Normal"},
-                   { Name: "Кент Бэйзмор", Salary: 15730338, Type: "Normal"},
-                   { Name: "Тьяго Сплиттер", Salary: 8550000, Type: "Normal"},
-                   { Name: "Кайл Корвер", Salary: 5239437, Type: "Normal"},
-                   { Name: "Крис Хамфрис", Salary: 4000000, Type: "Normal"},
-                   { Name: "Табо Сефолоша", Salary: 3850000, Type: "Normal"},
-                   { Name: "Майк Скотт", Salary: 3333333, Type: "Normal"},
-                   { Name: "Деннис Шредер", Salary: 2708582, Type: "Normal"},
-                   { Name: "Малкольм Дилэйни", Salary: 2500000, Type: "Normal"},
-                   { Name: "Торин Принс", Salary: 2318280, Type: "Normal"},
-                   { Name: "Тим Хардуэй-младший", Salary: 2281605, Type: "Normal"},
-                   { Name: "ДеАндре Бембри", Salary: 1499760, Type: "Normal"},
-                   { Name: "Майк Мускала", Salary: 1015696, Type: "NonGuaranteed"},
-                   { Name: "Валтер Тавареш", Salary: 1000000, Type: "Fired"},
-                   { Name: "Джаррет Джек", Salary: 980431, Type: "Fired"},
-                   { Name: "Райан Келли", Salary: 979848, Type: "NonGuaranteed"},
-                   { Name: "Мэтт Костелло", Salary: 50000, Type: "Fired"}] },
+                  //  { Name: "Пол Миллсэп", Salary: 20072033, Type: "Normal"},
+                  //  { Name: "Кент Бэйзмор", Salary: 15730338, Type: "Normal"},
+                  //  { Name: "Тьяго Сплиттер", Salary: 8550000, Type: "Normal"},
+                  //  { Name: "Кайл Корвер", Salary: 5239437, Type: "Normal"},
+                  //  { Name: "Крис Хамфрис", Salary: 4000000, Type: "Normal"},
+                  //  { Name: "Табо Сефолоша", Salary: 3850000, Type: "Normal"},
+                  //  { Name: "Майк Скотт", Salary: 3333333, Type: "Normal"},
+                  //  { Name: "Деннис Шредер", Salary: 2708582, Type: "Normal"},
+                  //  { Name: "Малкольм Дилэйни", Salary: 2500000, Type: "Normal"},
+                  //  { Name: "Торин Принс", Salary: 2318280, Type: "Normal"},
+                  //  { Name: "Тим Хардуэй-младший", Salary: 2281605, Type: "Normal"},
+                  //  { Name: "ДеАндре Бембри", Salary: 1499760, Type: "Normal"},
+                  //  { Name: "Майк Мускала", Salary: 1015696, Type: "NonGuaranteed"},
+                  //  { Name: "Валтер Тавареш", Salary: 1000000, Type: "Fired"},
+                  //  { Name: "Джаррет Джек", Salary: 980431, Type: "Fired"},
+                  //  { Name: "Райан Келли", Salary: 979848, Type: "NonGuaranteed"},
+                  //  { Name: "Мэтт Костелло", Salary: 50000, Type: "Fired"}
+                   ] },
       {"Id":2, "Name":"Бостон","TotalSalary":93228631.0,"SoftSalaryGap":1207840.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0, ImageUrl:"/40/70/50/74/ruef17eeef85d.jpeg" },
       {"Id":3, "Name":"Бруклин","TotalSalary":75318224.0,"SoftSalaryGap":18824776.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0, ImageUrl:"/36/79/50/37/ruee5d06a225a.jpeg" },
       {"Id":4, "Name":"Вашингтон","TotalSalary":102460025.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0, ImageUrl:"/73/27/41/17/rue23c62e1b86.png" },
@@ -94,9 +95,9 @@
       {"Id":28,"Name":"Чикаго","TotalSalary":96199727.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0, ImageUrl:"/47/25/13/64/rue37e090c807.jpeg" },
       {"Id":29,"Name":"Шарлотт","TotalSalary":99091302.0,"SoftSalaryGap":0.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0, ImageUrl:"/70/84/73/71/rue588ac97201.jpg" },
       {"Id":30,"Name":"Юта","TotalSalary":81817624.0,"SoftSalaryGap":14810504.0,"HardSalaryGap":0.0,"SalaryLuxuryTax":0.0, ImageUrl:"/74/53/32/58/ruede06eefd17.jpeg" }]
-    var squares = [{ name: 'Мягкий потолок зарплат', value: SOFT_SALARY_CAP_SQRT, color: '#c7e9c0' },
-                   { name: 'Порог налога на роскошь', value: LUXURY_TAX_CAP_SQRT, color: '#e7cb94' },
-                   { name: 'Жёсткий потолок зарплат', value: HARD_SALARY_CAP_SQRT, color: '#e6550d' }];
+    var squares = [{ name: 'Мягкий потолок зарплат ($' + formatNumber(SOFT_SALARY_CAP) + ')', value: SOFT_SALARY_CAP_SQRT, color: '#c7e9c0' },
+                   { name: 'Порог налога на роскошь ($' + formatNumber(LUXURY_TAX_CAP) + ')', value: LUXURY_TAX_CAP_SQRT, color: '#e7cb94' },
+                   { name: 'Жёсткий потолок зарплат ($' + formatNumber(HARD_SALARY_CAP) + ')', value: HARD_SALARY_CAP_SQRT, color: '#e6550d' }];
     var colors = d3.scale.ordinal()
       .range(['#e6550d', '#e7cb94', '#c7e9c0']);
     var rS = [5, 10, 15];
@@ -179,7 +180,6 @@
       });
     legend.append("line")
       .attr({
-        //x1: WIDTH - 20,
         x1: MARGINS.left,
         x2: WIDTH + 24,
         y1: 0,
@@ -190,7 +190,7 @@
     legend.append("text")
       .attr({
         x: WIDTH + 34,
-        y: -1,
+        y: function (d, i) { return i == 1 ? 5 :-1 },
         dy: ".35em"
       })
       .style("text-anchor", "start")
@@ -226,7 +226,6 @@
         src: function (di) { return 'http://s5o.ru/storage/simple/ru/edt' + di.ImageUrl; },
         alt: function (di) { return di.Name; }
       })
-//       .html(function (di) { return di.Name; })
       .on('click', function (d) {
         var selectedTeam = vis
           .selectAll('.rect')
@@ -253,24 +252,24 @@
             .data(d.Players, function (di) { return di.Name; });
           var total = 0;
           d.Players.forEach(function(di, i) {
-            if (i < 3) alert(di.Name);
-            di.Cumulative = total;
-            total += di.Salary;
+            di.Percents = xScale(Math.sqrt(d.TotalSalary)) * di.Salary / d.TotalSalary;
+            di.Start = total;
+            total += di.Percents;
           });
 
           players.enter()
             .append('rect')
             .attr({
               x: MARGINS.left + 1,
-              y: function (di) { return xScale(Math.sqrt(total)) - xScale(Math.sqrt(di.Cumulative)) - MARGINS.top * 2; },
+              y: function (di) { return xScale(HARD_SALARY_CAP_SQRT) - xScale(Math.sqrt(d.TotalSalary)) * di.Salary / d.TotalSalary; },
               width: WIDTH - MARGINS.left - 1 - MARGINS.right,
-              height: function (di) { return Math.floor(xScale(Math.sqrt(di.Salary))); },
+              height: function (di) { return di.Percents; },
               fill: function(di, i) { return colors(i % 3); },
               class: 'player'
             });
         } else {
         }
-        
+
         var teamInfo = vis
           .selectAll('.teamInfo')
           .data([d], function (di) { return di.Id; });
