@@ -181,7 +181,8 @@
     vis.append("svg:g")
       .attr("transform", "translate(" + (WIDTH - MARGINS.right) + ", 0)")
       .attr("class", "axis")
-      .call(yAxis);
+      .call(yAxis),
+    c20с = d3.scale.category20c();
 
     /*var getPathLine = function (salary) {
       var salaryCap = salary.value;
@@ -273,29 +274,10 @@
         alt: function (di) { return di.Name; }
       })
       .on('click', function (d) {
-        var selectedTeam = vis
-          .selectAll('.rect')
-          .data([d], function (di) { return di.Id; });
-        selectedTeam.enter()
-          .append('rect')
-          .attr({
-            x: MARGINS.left + 1,
-            y: function (di) { return xScale(HARD_SALARY_CAP_SQRT) - xScale(Math.sqrt(di.TotalSalary)) + MARGINS.top; },
-            //width: function (di) { return xScale(Math.sqrt(di.TotalSalary)) - MARGINS.left; },
-            width: WIDTH - MARGINS.left - 1 - MARGINS.right,
-            height: function (di) { return xScale(Math.sqrt(di.TotalSalary)) - MARGINS.top; },
-            fill: getColorBySalary,
-            //opacity: 0.4,
-            strokewidth: 3,
-            rx: 10,
-            ry: 10,
-            class: 'rect'
-          });
-
         if (d.Players) {
           var players = vis
             .selectAll('.player')
-            .data(d.Players, function (di) { return di.Name; });
+            .data(d.Players, function (di) { return di.Salary + di.Type + di.Name; });
           var total = 0;
           var teamHeight = xScale(Math.sqrt(d.TotalSalary)) - MARGINS.top; 
           d.Players.forEach(function(di, i) {
@@ -311,11 +293,30 @@
               y: function (di) { return xScale(HARD_SALARY_CAP_SQRT) - teamHeight * di.Salary / d.TotalSalary - di.Start; },
               width: WIDTH - MARGINS.left - 1 - MARGINS.right,
               height: function (di) { return di.Height; },
-              fill: function(di, i) { return colors(i % 3); },
+              fill: function (di, i) { return c20с(i); },
               class: 'player'
             });
           players.exit().remove();
         } else {
+          var selectedTeam = vis
+            .selectAll('.rect')
+            .data([d], function (di) { return di.Id; });
+          selectedTeam.enter()
+            .append('rect')
+            .attr({
+              x: MARGINS.left + 1,
+              y: function (di) { return xScale(HARD_SALARY_CAP_SQRT) - xScale(Math.sqrt(di.TotalSalary)) + MARGINS.top; },
+              //width: function (di) { return xScale(Math.sqrt(di.TotalSalary)) - MARGINS.left; },
+              width: WIDTH - MARGINS.left - 1 - MARGINS.right,
+              height: function (di) { return xScale(Math.sqrt(di.TotalSalary)) - MARGINS.top; },
+              fill: getColorBySalary,
+              //opacity: 0.4,
+              strokewidth: 3,
+              rx: 10,
+              ry: 10,
+              class: 'rect'
+            });
+          selectedTeam.exit().remove();
         }
 
         var teamInfo = vis
@@ -324,14 +325,13 @@
         teamInfo.enter()
           .append('text')
           .attr({
-            x: 100,
-            y: 100,
+            x: 50,
+            y: 30,
             dy: '.35em',
             class: 'teamInfo'
           })
           .html(formatItem);
         teamInfo.exit().remove();
-        selectedTeam.exit().remove();
       });
     teams.exit().remove();
     //    });
