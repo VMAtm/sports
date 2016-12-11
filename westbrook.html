@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="http://getbootstrap.com/examples/justified-nav/justified-nav.css" rel="stylesheet">
+  <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-2.0.3.min.js"></script>
+  <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+</head>
+<body>
+  <script type="text/javascript">
+    var uri = 'stats.nba.com/stats/scoreboard/?GameDate=12/10/2016&LeagueID=00&DayOffset=0';
+    $(document).ready(function () {
+      //Send an AJAX request
+      $.getJSON(uri)
+        .done(function (data) {
+        }
+        .error(function (e) {
+          alert('here');
+        });
+    }
+  </script>
+</body>
+</html>
