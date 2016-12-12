@@ -33,24 +33,28 @@
             })
             .html(formattedData.name);
 
-          var formatTable = function(label, startX, name) {
+          var formatTable = function(d, label, startX, startY, name) {
             var foundLabels = vis.selectAll('.' + label)
-              .data(formattedData.total);
+              .data(d);
             foundLabels
               .enter()
               .append('text')
               .attr({
                 x: startX,
-                y: function (d, i) { return 30 + i * 20; },
+                y: function (di, i) { return startY + i * 20; },
                 dy: '.35em',
                 class: label
               })
-              .html(function(d) { return d[name]; });
+              .html(function(di) { return di[name]; });
             foundLabels.exit().remove();
           };
 
-          formatTable('infoTotalLabels', 50, 'name');
-          formatTable('infoTotal', 170, 'value');
+          formatTable(formattedData.total, 'infoTotalLabels', 50, 30, 'name');
+          formatTable(formattedData.total, 'infoTotal', 170, 30, 'value');
+          formatTable(formattedData.perGame, 'infoPerGameLabels', 290, 30, 'name');
+          formatTable(formattedData.perGame, 'infoPerGame', 410, 30, 'value');
+          formatTable(formattedData.leftToScore, 'infoLeftLabels', 50, 130, 'name');
+          formatTable(formattedData.leftToScore, 'infoLeft', 170, 130, 'value');
         },
         error: function() { alert('boo!'); },
         headers: { 'X-Alt-Referer': 'http://stats.nba.com/' }
@@ -65,20 +69,30 @@
         , assistsNumber = headers.indexOf('AST')
         , reboundsNumber = headers.indexOf('REB')
         , pointsNumber = headers.indexOf('PTS');
-      var currentSeason = d[0].rowSet.filter(function (e) { return e[seasonNumber] == "2016-17"; });
-      var games = currentSeason[0][gamesNumber];
+      var currentSeason = d[0].rowSet.filter(function (e) { return e[seasonNumber] == "2016-17"; })[0];
+      var games = currentSeason[gamesNumber];
+      var points = currentSeason[pointsNumber];
+      var assists = currentSeason[assistsNumber];
+      var rebounds = currentSeason[reboundsNumber];
+      
       result['total'] = [
         { 'name': 'Игры', 'value': games },
-        { 'name': 'Очки', 'value': currentSeason[0][pointsNumber] },
-        { 'name': 'Передачи', 'value': currentSeason[0][assistsNumber] },
-        { 'name': 'Подборы', 'value': currentSeason[0][reboundsNumber] },
+        { 'name': 'Очки', 'value': points },
+        { 'name': 'Передачи', 'value': assists },
+        { 'name': 'Подборы', 'value': rebounds },
       ];
       result['perGame'] = [
-        { 'name': 'В среднем', 'value': 82 },
-        { 'name': 'Очков', 'value': (result.points / games).toFixed(1) },
-        { 'name': 'Передач', 'value': (result.assists / games).toFixed(1) },
-        { 'name': 'Подборов', 'value': (result.rebounds / games).toFixed(1) },
-      ]; 
+        { 'name': 'В среднем', 'value': '' },
+        { 'name': 'Очков', 'value': (points / games).toFixed(1) },
+        { 'name': 'Передач', 'value': (assists / games).toFixed(1) },
+        { 'name': 'Подборов', 'value': (rebounds / games).toFixed(1) },
+      ];
+      result['leftToScore'] = [
+        { 'name': 'Осталось', 'value': '' },
+        { 'name': 'Очков', 'value': 820 - points },
+        { 'name': 'Передач', 'value': 820 - assists },
+        { 'name': 'Подборов', 'value': 820 - rebounds },
+      ];
       return result;
     };
   </script>
