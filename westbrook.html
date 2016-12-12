@@ -8,9 +8,41 @@
 </head>
 <body>
   <div class="container">
-    <svg id="visualisation" width="800" height="800"></svg>
+    <svg id="visualisation" width="500" height="200" />
+    <br />
+    <input type="text" value="81" id="gamesInSeason">
+    <button onclick="return recount();">Пересчитать</button>
   </div>
   <script type="text/javascript">
+    var vis = d3.select('#visualisation'),
+      WIDTH = 800,
+      HEIGHT = 800;
+
+    var formatTable = function(d, label, startX, startY, name) {
+      var foundLabels = vis.selectAll('.' + label)
+        .data(d, function (d) { return d.name + '' + d.value; });
+      foundLabels
+        .enter()
+        .append('text')
+        .attr({
+          x: startX,
+          y: function (di, i) { return startY + i * 20; },
+          dy: '.35em',
+          class: label
+        })
+        .html(function(di) { return di[name]; });
+      foundLabels.exit().remove();
+    };
+
+    var data = null;
+    var recount = function() {
+      var games = $('#gamesInSeason').val() * 1;
+      var newData = getPlayerInfo(data, games);
+      formatTable(newData.leftToScore, 'infoLeft', 170, 130, 'value');
+      formatTable(newData.rythm, 'infoRythm', 410, 130, 'value');
+      return true;
+    }
+
     var uri = 'http://stats.nba.com/stats/playercareerstats?LeagueID=00&PerMode=Totals&PlayerID=201566';
     $(document).ready(function () {
       $.ajax({
@@ -18,12 +50,9 @@
         type: 'GET',
         dataType: 'jsonp',
         success: function(result) {
-          var data = result.resultSets.filter(function(e) { return e.name == 'SeasonTotalsRegularSeason'; });
-          var vis = d3.select('#visualisation'),
-            WIDTH = 800,
-            HEIGHT = 800;
+          data = result.resultSets.filter(function(e) { return e.name == 'SeasonTotalsRegularSeason'; });
           
-          var formattedData = getPlayerInfo(data);
+          var formattedData = getPlayerInfo(data, 82);
           vis
             .append('text')
             .attr({
@@ -33,35 +62,21 @@
             })
             .html(formattedData.name);
 
-          var formatTable = function(d, label, startX, startY, name) {
-            var foundLabels = vis.selectAll('.' + label)
-              .data(d);
-            foundLabels
-              .enter()
-              .append('text')
-              .attr({
-                x: startX,
-                y: function (di, i) { return startY + i * 20; },
-                dy: '.35em',
-                class: label
-              })
-              .html(function(di) { return di[name]; });
-            foundLabels.exit().remove();
-          };
-
           formatTable(formattedData.total, 'infoTotalLabels', 50, 30, 'name');
           formatTable(formattedData.total, 'infoTotal', 170, 30, 'value');
           formatTable(formattedData.perGame, 'infoPerGameLabels', 290, 30, 'name');
           formatTable(formattedData.perGame, 'infoPerGame', 410, 30, 'value');
           formatTable(formattedData.leftToScore, 'infoLeftLabels', 50, 130, 'name');
           formatTable(formattedData.leftToScore, 'infoLeft', 170, 130, 'value');
+          formatTable(formattedData.rythm, 'infoRythmLabels', 290, 130, 'name');
+          formatTable(formattedData.rythm, 'infoRythm', 410, 130, 'value');
         },
         error: function() { alert('boo!'); },
         headers: { 'X-Alt-Referer': 'http://stats.nba.com/' }
       });
     });
 
-    var getPlayerInfo = function(d) {
+    var getPlayerInfo = function(d, seasonGames) {
       var result = { name: 'Russell Westbrook' };
       var headers = d[0].headers;
       var seasonNumber = headers.indexOf('SEASON_ID')
@@ -76,10 +91,10 @@
       var rebounds = currentSeason[reboundsNumber];
       
       result['total'] = [
-        { 'name': 'Игры', 'value': games },
-        { 'name': 'Очки', 'value': points },
-        { 'name': 'Передачи', 'value': assists },
-        { 'name': 'Подборы', 'value': rebounds },
+        { 'name': 'Игр', 'value': games },
+        { 'name': 'Очков', 'value': points },
+        { 'name': 'Передач', 'value': assists },
+        { 'name': 'Подборов', 'value': rebounds },
       ];
       result['perGame'] = [
         { 'name': 'В среднем', 'value': '' },
@@ -89,9 +104,15 @@
       ];
       result['leftToScore'] = [
         { 'name': 'Осталось', 'value': '' },
-        { 'name': 'Очков', 'value': 820 - points },
-        { 'name': 'Передач', 'value': 820 - assists },
-        { 'name': 'Подборов', 'value': 820 - rebounds },
+        { 'name': 'Очков', 'value': seasonGames * 10 - points },
+        { 'name': 'Передач', 'value': seasonGames * 10 - assists },
+        { 'name': 'Подборов', 'value': seasonGames * 10 - rebounds },
+      ];
+      result['rythm'] = [
+        { 'name': 'В том же темпе', 'value': '' },
+        { 'name': 'Очков', 'value': Math.floor(seasonGames * points / games) },
+        { 'name': 'Передач', 'value': Math.floor(seasonGames * assists / games) },
+        { 'name': 'Подборов', 'value': Math.floor(seasonGames * rebounds / games) },
       ];
       return result;
     };
