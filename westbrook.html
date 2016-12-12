@@ -32,34 +32,25 @@
               dy: '.35em'
             })
             .html(formattedData.name);
-          
-          var infoTotalL = vis.selectAll('.infoTotalLabels')
-            .data(formattedData.total);
-          infoTotalL
-            .enter()
-            .append('text')
-            .attr({
-              x: 50,
-              y: function (d, i) { return 30 + i * 20; },
-              dy: '.35em',
-              class: 'infoTotalLabels'
-            })
-            .html(function(d) { return d.name; });
-          infoTotalL.exit().remove();
 
-          var infoTotal = vis.selectAll('.infoTotal')
-            .data(formattedData.total);
-          infoTotal
-            .enter()
-            .append('text')
-            .attr({
-              x: 170,
-              y: function (d, i) { return 30 + i * 20; },
-              dy: '.35em',
-              class: 'infoTotal'
-            })
-            .html(function(d) { return d.value; });
-          infoTotal.exit().remove();
+          var formatTable = function(label, startX, name) {
+            var foundLabels = vis.selectAll('.' + label)
+              .data(formattedData.total);
+            foundLabels
+              .enter()
+              .append('text')
+              .attr({
+                x: startX,
+                y: function (d, i) { return 30 + i * 20; },
+                dy: '.35em',
+                class: label
+              })
+              .html(function(d) { return d[name]; });
+            foundLabels.exit().remove();
+          };
+
+          formatTable('infoTotalLabels', 50, 'name');
+          formatTable('infoTotal', 170, 'value');
         },
         error: function() { alert('boo!'); },
         headers: { 'X-Alt-Referer': 'http://stats.nba.com/' }
