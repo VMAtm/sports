@@ -7,18 +7,89 @@
   <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
 </head>
 <body>
+  <div class="container">
+    <svg id="visualisation" width="800" height="800"></svg>
+  </div>
   <script type="text/javascript">
-    var uri = 'stats.nba.com/stats/scoreboard/?GameDate=12/10/2016&LeagueID=00&DayOffset=0';
+    var uri = 'http://stats.nba.com/stats/playercareerstats?LeagueID=00&PerMode=Totals&PlayerID=201566';
     $(document).ready(function () {
-      // Send an AJAX request
-      // http://stats.nba.com/scores
-      $.getJSON(uri)
-        .done(function (data) {
-        })
-        .error(function (e) {
-          alert(e);
-        });
+      $.ajax({
+        url: uri,
+        type: 'GET',
+        dataType: 'jsonp',
+        success: function(result) {
+          var data = result.resultSets.filter(function(e) { return e.name == 'SeasonTotalsRegularSeason'; });
+          var vis = d3.select('#visualisation'),
+            WIDTH = 800,
+            HEIGHT = 800;
+          
+          var formattedData = getPlayerInfo(data);
+          vis
+            .append('text')
+            .attr({
+              x: 30,
+              y: 10,
+              dy: '.35em'
+            })
+            .html(formattedData.name);
+          
+          var infoTotalL = vis.selectAll('.infoTotalLabels')
+            .data(formattedData.total);
+          infoTotalL
+            .enter()
+            .append('text')
+            .attr({
+              x: 50,
+              y: function (d, i) { return 30 + i * 20; },
+              dy: '.35em',
+              class: 'infoTotalLabels'
+            })
+            .html(function(d) { return d.name; });
+          infoTotalL.exit().remove();
+
+          var infoTotal = vis.selectAll('.infoTotal')
+            .data(formattedData.total);
+          infoTotal
+            .enter()
+            .append('text')
+            .attr({
+              x: 170,
+              y: function (d, i) { return 30 + i * 20; },
+              dy: '.35em',
+              class: 'infoTotal'
+            })
+            .html(function(d) { return d.value; });
+          infoTotal.exit().remove();
+        },
+        error: function() { alert('boo!'); },
+        headers: { 'X-Alt-Referer': 'http://stats.nba.com/' }
+      });
     });
+
+    var getPlayerInfo = function(d) {
+      var result = { name: 'Russell Westbrook' };
+      var headers = d[0].headers;
+      var seasonNumber = headers.indexOf('SEASON_ID')
+        , gamesNumber = headers.indexOf('GP')
+        , assistsNumber = headers.indexOf('AST')
+        , reboundsNumber = headers.indexOf('REB')
+        , pointsNumber = headers.indexOf('PTS');
+      var currentSeason = d[0].rowSet.filter(function (e) { return e[seasonNumber] == "2016-17"; });
+      var games = currentSeason[0][gamesNumber];
+      result['total'] = [
+        { 'name': 'Игры', 'value': games },
+        { 'name': 'Очки', 'value': currentSeason[0][pointsNumber] },
+        { 'name': 'Передачи', 'value': currentSeason[0][assistsNumber] },
+        { 'name': 'Подборы', 'value': currentSeason[0][reboundsNumber] },
+      ];
+      result['perGame'] = [
+        { 'name': 'В среднем', 'value': 82 },
+        { 'name': 'Очков', 'value': (result.points / games).toFixed(1) },
+        { 'name': 'Передач', 'value': (result.assists / games).toFixed(1) },
+        { 'name': 'Подборов', 'value': (result.rebounds / games).toFixed(1) },
+      ]; 
+      return result;
+    };
   </script>
 </body>
 </html>
