@@ -5,18 +5,29 @@
   <link href="http://getbootstrap.com/examples/justified-nav/justified-nav.css" rel="stylesheet">
   <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-2.0.3.min.js"></script>
   <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+  <style>
+    .label {
+      font: 20px Verdana;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
-    <svg id="visualisation" width="500" height="200" />
+    <div class="row">
+      <div class="col-xs-7">
+        <svg id="visualisation" width="700" height="400" />
+      </div>
+      <div class="col-xs-5">Трипл-даблов: <span id="tripleDoubles"></span></div>
+    </div>
   </div>
   <br />
-  <input type="text" value="81" id="gamesInSeason">
-  <button onclick="return recount();">Пересчитать</button>
+  <!--<input type="text" value="81" id="gamesInSeason">
+  http://stats.nba.com/stats/leaguegamefinder?Conference=&DateFrom=&DateTo=&Division=&DraftNumber=&DraftRound=&DraftYear=&GB=N&LeagueID=00&Location=&Outcome=&PlayerID=201566&PlayerOrTeam=P&Season=2016-17&SeasonType=Regular+Season&StatCategory=PTS&TeamID=&VsConference=&VsDivision=&VsTeamID=
+  <button onclick="return recount();">Пересчитать</button>-->
   <script type="text/javascript">
     var vis = d3.select('#visualisation'),
-      WIDTH = 800,
-      HEIGHT = 800;
+      WIDTH = 900,
+      HEIGHT = 900;
 
     var formatTable = function(d, label, startX, startY, name) {
       var foundLabels = vis.selectAll('.' + label)
@@ -26,9 +37,9 @@
         .append('text')
         .attr({
           x: startX,
-          y: function (di, i) { return startY + i * 20; },
+          y: function (di, i) { return startY + i * 20 + (i != 0) * 5; },
           dy: '.35em',
-          class: label
+          class: "label"
         })
         .html(function(di) { return di[name]; });
       foundLabels.exit().remove();
@@ -43,76 +54,129 @@
       return true;
     }
 
-    var uri = 'http://stats.nba.com/stats/playercareerstats?LeagueID=00&PerMode=Totals&PlayerID=201566';
+    var totalGames = 0,
+        totalPoints = 0,
+        totalRebounds = 0,
+        totalAssists = 0,
+        totalTD = 0;
+
+    var getGamesInfo = function(d) {
+      var gamesNumber = d[0].headers.indexOf('MATCHUP')
+        , wlNumber = d[0].headers.indexOf('WL')
+        , pointsNumber = d[0].headers.indexOf('PTS')
+        , reboundsNumber = d[0].headers.indexOf('REB')
+        , assistsNumber = d[0].headers.indexOf('AST');
+
+      var result = d[0].rowSet.map(function(game, index) {
+        var resultG = {
+          id: index,
+          name: game[gamesNumber],
+          wl: game[wlNumber] == 'Y',
+          points: game[pointsNumber],
+          rebounds: game[reboundsNumber],
+          assists: game[assistsNumber],
+          isTD: (game[pointsNumber] >= 10 && game[reboundsNumber] >= 10 && game[assistsNumber] >= 10),
+        };
+
+        totalGames += 1;
+        totalPoints += resultG.points;
+        totalRebounds += resultG.rebounds;
+        totalAssists += resultG.assists;
+        totalTD += 1 * resultG.isTD;
+
+        resultG.totalGames = totalGames;
+        resultG.totalPoints = totalPoints;
+        resultG.totalRebounds = totalRebounds;
+        resultG.totalAssists = totalAssists;
+        resultG.totalTD = totalTD;
+
+        return resultG;
+      });
+      return result;
+    }
+
+    var uriPlayer = 'http://stats.nba.com/stats/playercareerstats?LeagueID=00&PerMode=Totals&PlayerID=201566';
+    var uriGames = "http://stats.nba.com/stats/leaguegamefinder?GB=N&LeagueID=00&PlayerID=201566&PlayerOrTeam=P&Season=2016-17&SeasonType=Regular+Season&StatCategory=PTS";
     $(document).ready(function () {
       $.ajax({
-        url: uri,
+        url: uriGames,
         type: 'GET',
         dataType: 'jsonp',
         success: function(result) {
-          data = result.resultSets.filter(function(e) { return e.name == 'SeasonTotalsRegularSeason'; });
-          
+          var gamesDataHeaders = result.resultSets.headers;
+          var gamesData = getGamesInfo(result.resultSets);
           var formattedData = getPlayerInfo(data, 82);
+          
+          $("#tripleDoubles").text(totalTD);
+
           vis
             .append('text')
             .attr({
               x: 30,
               y: 10,
-              dy: '.35em'
+              dy: '.35em',
+              class: 'label',
             })
             .html(formattedData.name);
 
-          formatTable(formattedData.total, 'infoTotalLabels', 50, 30, 'name');
-          formatTable(formattedData.total, 'infoTotal', 170, 30, 'value');
-          formatTable(formattedData.perGame, 'infoPerGameLabels', 290, 30, 'name');
-          formatTable(formattedData.perGame, 'infoPerGame', 410, 30, 'value');
-          formatTable(formattedData.leftToScore, 'infoLeftLabels', 50, 130, 'name');
-          formatTable(formattedData.leftToScore, 'infoLeft', 170, 130, 'value');
-          formatTable(formattedData.rythm, 'infoRythmLabels', 290, 130, 'name');
-          formatTable(formattedData.rythm, 'infoRythm', 410, 130, 'value');
+          formatTable(formattedData.total, 'infoTotalLabels', 50, 50, 'name');
+          formatTable(formattedData.total, 'infoTotal', 230, 50, 'value');
+          
+          formatTable(formattedData.perGame, 'infoPerGameLabels', 370, 50, 'name');
+          formatTable(formattedData.perGame, 'infoPerGame', 560, 50, 'value');
+          
+          formatTable(formattedData.leftToScore, 'infoLeftLabels', 50, 170, 'name');
+          formatTable(formattedData.leftToScore, 'infoLeft', 230, 170, 'value');
+          
+          formatTable(formattedData.rythm, 'infoRythmLabels', 370, 170, 'name');
+          formatTable(formattedData.rythm, 'infoRythm', 560, 170, 'value');
+
+          formatTable(formattedData.perGameLeft, 'infoPerGameLeftLabels', 50, 290, 'name');
+          formatTable(formattedData.perGameLeft, 'infoPerGameLeft', 230, 290, 'value');
+
         },
-        error: function() { alert('boo!'); },
-        headers: { 'X-Alt-Referer': 'http://stats.nba.com/' }
+        error: function (xhr, ajaxOptions, thrownError) {
+          alert(thrownError);
+        },
       });
     });
 
     var getPlayerInfo = function(d, seasonGames) {
       var result = { name: 'Russell Westbrook' };
-      var headers = d[0].headers;
-      var seasonNumber = headers.indexOf('SEASON_ID')
-        , gamesNumber = headers.indexOf('GP')
-        , assistsNumber = headers.indexOf('AST')
-        , reboundsNumber = headers.indexOf('REB')
-        , pointsNumber = headers.indexOf('PTS');
-      var currentSeason = d[0].rowSet.filter(function (e) { return e[seasonNumber] == "2016-17"; })[0];
-      var games = currentSeason[gamesNumber];
-      var points = currentSeason[pointsNumber];
-      var assists = currentSeason[assistsNumber];
-      var rebounds = currentSeason[reboundsNumber];
+      var games = totalGames;
+      var points = totalPoints;
+      var assists = totalAssists;
+      var rebounds = totalRebounds;
       
       result['total'] = [
-        { 'name': 'Игр', 'value': games },
-        { 'name': 'Очков', 'value': points },
-        { 'name': 'Передач', 'value': assists },
-        { 'name': 'Подборов', 'value': rebounds },
+        { name: 'Игр', value: games },
+        { name: 'Очков', value: points },
+        { name: 'Передач', value: assists },
+        { name: 'Подборов', value: rebounds },
       ];
       result['perGame'] = [
-        { 'name': 'В среднем', 'value': '' },
-        { 'name': 'Очков', 'value': (points / games).toFixed(1) },
-        { 'name': 'Передач', 'value': (assists / games).toFixed(1) },
-        { 'name': 'Подборов', 'value': (rebounds / games).toFixed(1) },
+        { name: 'В среднем', value: '' },
+        { name: 'Очков', value: (points / games).toFixed(1) },
+        { name: 'Передач', value: (assists / games).toFixed(1) },
+        { name: 'Подборов', value: (rebounds / games).toFixed(1) },
       ];
       result['leftToScore'] = [
-        { 'name': 'Осталось', 'value': '' },
-        { 'name': 'Очков', 'value': seasonGames * 10 - points },
-        { 'name': 'Передач', 'value': seasonGames * 10 - assists },
-        { 'name': 'Подборов', 'value': seasonGames * 10 - rebounds },
+        { name: 'Осталось', value: '' },
+        { name: 'Очков', value: Math.max(seasonGames * 10 - points, 0) },
+        { name: 'Передач', value: Math.max(seasonGames * 10 - assists, 0) },
+        { name: 'Подборов', value: Math.max(seasonGames * 10 - rebounds, 0) },
       ];
       result['rythm'] = [
-        { 'name': 'В том же темпе', 'value': '' },
-        { 'name': 'Очков', 'value': Math.floor(seasonGames * points / games) },
-        { 'name': 'Передач', 'value': Math.floor(seasonGames * assists / games) },
-        { 'name': 'Подборов', 'value': Math.floor(seasonGames * rebounds / games) },
+        { name: 'В том же темпе', value: '' },
+        { name: 'Очков', value: Math.floor(seasonGames * points / games) },
+        { name: 'Передач', value: Math.floor(seasonGames * assists / games) },
+        { name: 'Подборов', value: Math.floor(seasonGames * rebounds / games) },
+      ];
+      result['perGameLeft'] = [
+        { name: 'Нужно в том же темпе за игру', value: '' },
+        { name: 'Очков', value: (Math.max(seasonGames * 10 - points, 0) / (seasonGames > games ? seasonGames - games : 1)).toFixed(1) },
+        { name: 'Передач', value: (Math.max(seasonGames * 10 - assists, 0) / (seasonGames > games ? seasonGames - games : 1)).toFixed(1) },
+        { name: 'Подборов', value: (Math.max(seasonGames * 10 - rebounds, 0) / (seasonGames > games ? seasonGames - games : 1)).toFixed(1) },
       ];
       return result;
     };
