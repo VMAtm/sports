@@ -14,18 +14,35 @@
       list-style: none;
       display: 'inline-block';
     }
+
+    .axis text {
+      font: 10px sans-serif;
+    }
+
+    .axis line,
+    .axis path {
+      fill: none;
+      stroke: #000;
+      shape-rendering: crispEdges;
+    }
+
   </style>
 </head>
 <body>
   <div class="container">
     <div class="row">
-      <div class="col-xs-7">
-        <svg id="visualisation" width="700" height="400" />
-      </div>
-      <div class="col-xs-5">
-        Трипл-даблов: <span id="tripleDoubles"></span>
-        <ul id="legend">
-        </ul>
+      <div class="col-xs-12">
+        <svg id="timeline" />        
+        <div class="row">
+          <div class="col-xs-7">
+            <svg id="visualisation" width="700" height="700" />
+          </div>
+          <div class="col-xs-5">
+            Трипл-даблов: <span id="tripleDoubles"></span>
+            <ul id="legend">
+            </ul>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -34,9 +51,30 @@
   http://stats.nba.com/stats/leaguegamefinder?Conference=&DateFrom=&DateTo=&Division=&DraftNumber=&DraftRound=&DraftYear=&GB=N&LeagueID=00&Location=&Outcome=&PlayerID=201566&PlayerOrTeam=P&Season=2016-17&SeasonType=Regular+Season&StatCategory=PTS&TeamID=&VsConference=&VsDivision=&VsTeamID=
   <button onclick="return recount();">Пересчитать</button>-->
   <script type="text/javascript">
+    function parseDate(input) {
+      var parts = input.split('-');
+      // new Date(year, month [, day [, hours[, minutes[, seconds[, ms]]]]])
+      return new Date(parts[0], parts[1]-1, parts[2]); // Note: months are 0-based
+    }
+
     var vis = d3.select('#visualisation'),
       WIDTH = 900,
-      HEIGHT = 900;
+      HEIGHT = 300,
+      margin = { top: 40, right: 40, bottom: 40, left: 40 },
+      width = WIDTH - margin.left - margin.right,
+      height = HEIGHT - margin.top - margin.bottom;
+
+    // sample from https://bl.ocks.org/mbostock/4149176
+    var customTimeFormat = d3.time.format.multi([
+      [".%L", function(d) { return d.getMilliseconds(); }],
+      [":%S", function(d) { return d.getSeconds(); }],
+      ["%I:%M", function(d) { return d.getMinutes(); }],
+      ["%I %p", function(d) { return d.getHours(); }],
+      ["%a %d", function(d) { return d.getDay() && d.getDate() != 1; }],
+      ["%b %d", function(d) { return d.getDate() != 1; }],
+      ["%B", function(d) { return d.getMonth(); }],
+      ["%Y", function() { return true; }]
+    ]);
 
     var formatTable = function(d, label, startX, startY, name) {
       var foundLabels = vis.selectAll('.' + label)
@@ -55,28 +93,25 @@
     };
 
     var data = null;
-    var recount = function() {
-      var games = $('#gamesInSeason').val() * 1;
-      var newData = getPlayerInfo(data, games);
-      formatTable(newData.leftToScore, 'infoLeft', 170, 130, 'value');
-      formatTable(newData.rythm, 'infoRythm', 410, 130, 'value');
-      return true;
-    }
 
     var totalGames = 0,
         totalPoints = 0,
         totalRebounds = 0,
         totalAssists = 0,
-        totalTD = 0;
+        totalTD = 0,
+        tdStreak = 0,
+        nottdStreak = 0;
 
     var getGamesInfo = function(d) {
       var gamesNumber = d[0].headers.indexOf('MATCHUP')
         , wlNumber = d[0].headers.indexOf('WL')
         , pointsNumber = d[0].headers.indexOf('PTS')
         , reboundsNumber = d[0].headers.indexOf('REB')
+        , dateNumber = d[0].headers.indexOf('GAME_DATE')
         , assistsNumber = d[0].headers.indexOf('AST');
 
-      var result = d[0].rowSet.map(function(game, index) {
+      var result = [];
+      d[0].rowSet.reverse().forEach(function(game, index) {
         var resultG = {
           id: index,
           name: game[gamesNumber],
@@ -84,8 +119,25 @@
           points: game[pointsNumber],
           rebounds: game[reboundsNumber],
           assists: game[assistsNumber],
+          date: parseDate(game[dateNumber]),
           isTD: (game[pointsNumber] >= 10 && game[reboundsNumber] >= 10 && game[assistsNumber] >= 10),
         };
+
+        if (resultG.isTD) {
+          if (nottdStreak) {
+            nottdStreak = 0;
+            tdStreak = 1;
+          } else {
+            tdStreak += 1;
+          }
+        } else {
+          if (tdStreak) {
+            tdStreak = 0;
+            nottdStreak = 1;
+          } else {
+            nottdStreak += 1;
+          }
+        }
 
         totalGames += 1;
         totalPoints += resultG.points;
@@ -98,14 +150,16 @@
         resultG.totalRebounds = totalRebounds;
         resultG.totalAssists = totalAssists;
         resultG.totalTD = totalTD;
+        resultG.tdStreak = tdStreak;
+        resultG.notTDStreak = nottdStreak;
 
-        return resultG;
+        result.push(resultG);
       });
       return result;
     }
 
     var uriPlayer = 'http://stats.nba.com/stats/playercareerstats?LeagueID=00&PerMode=Totals&PlayerID=201566';
-    var uriGames = "http://stats.nba.com/stats/leaguegamefinder?GB=N&LeagueID=00&PlayerID=201566&PlayerOrTeam=P&Season=2016-17&SeasonType=Regular+Season&StatCategory=PTS";
+    var uriGames = 'http://stats.nba.com/stats/leaguegamefinder?GB=N&LeagueID=00&PlayerID=201566&PlayerOrTeam=P&Season=2016-17&SeasonType=Regular+Season&StatCategory=PTS';
     $(document).ready(function () {
       $.ajax({
         url: uriGames,
@@ -121,8 +175,30 @@
           var gamesLegend = d3.select('#legend');
           var foundGames = gamesLegend
             .selectAll('li')
-            .data(gamesData, function (d) { return d.name; });
-          
+            .data(gamesData, function (d) { return d.name + d.date; });
+          alert(gamesData[0].date);
+          alert(gamesData[gamesData.length - 1].date);
+
+          var x = d3.time.scale()
+            .domain([gamesData[0].date, gamesData[gamesData.length - 1].date])
+            .range([0, width]);
+
+          var xAxis = d3.svg.axis()
+              .scale(x)
+              .tickFormat(customTimeFormat);
+
+          var svg = d3.select("#timeline")
+              //.append("svg")
+              .attr("width", width + margin.left + margin.right)
+              .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+              .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+          svg.append("g")
+              .attr("class", "x axis")
+              .attr("transform", "translate(0," + height + ")")
+              .call(xAxis);
+
           foundGames
             .enter()
             .append('li')
@@ -130,7 +206,7 @@
               width: '100px',
               height: '100px',
             })
-            .html(function(di) { return di.name; });
+            .html(function(di) { return di.name + ':' + di.points + ':' + di.rebounds + ':' + di.assists + ':' + di.isTD + ':' + di.tdStreak + ':' + di.notTDStreak + ':' + di.date; });
 
           foundGames
             .exit()
@@ -146,20 +222,20 @@
             })
             .html(formattedData.name);
 
-          formatTable(formattedData.total, 'infoTotalLabels', 50, 50, 'name');
-          formatTable(formattedData.total, 'infoTotal', 230, 50, 'value');
+          formatTable(formattedData.total, 'infoTotalLabels', 50, 250, 'name');
+          formatTable(formattedData.total, 'infoTotal', 230, 250, 'value');
           
-          formatTable(formattedData.perGame, 'infoPerGameLabels', 370, 50, 'name');
-          formatTable(formattedData.perGame, 'infoPerGame', 560, 50, 'value');
+          formatTable(formattedData.perGame, 'infoPerGameLabels', 370, 250, 'name');
+          formatTable(formattedData.perGame, 'infoPerGame', 560, 250, 'value');
           
-          formatTable(formattedData.leftToScore, 'infoLeftLabels', 50, 170, 'name');
-          formatTable(formattedData.leftToScore, 'infoLeft', 230, 170, 'value');
+          formatTable(formattedData.leftToScore, 'infoLeftLabels', 50, 370, 'name');
+          formatTable(formattedData.leftToScore, 'infoLeft', 230, 370, 'value');
           
-          formatTable(formattedData.rythm, 'infoRythmLabels', 370, 170, 'name');
-          formatTable(formattedData.rythm, 'infoRythm', 560, 170, 'value');
+          formatTable(formattedData.rythm, 'infoRythmLabels', 370, 370, 'name');
+          formatTable(formattedData.rythm, 'infoRythm', 560, 370, 'value');
 
-          formatTable(formattedData.perGameLeft, 'infoPerGameLeftLabels', 50, 290, 'name');
-          formatTable(formattedData.perGameLeft, 'infoPerGameLeft', 230, 290, 'value');
+          formatTable(formattedData.perGameLeft, 'infoPerGameLeftLabels', 50, 490, 'name');
+          formatTable(formattedData.perGameLeft, 'infoPerGameLeft', 230, 490, 'value');
 
         },
         error: function (xhr, ajaxOptions, thrownError) {
