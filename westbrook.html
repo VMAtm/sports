@@ -172,23 +172,19 @@
           
           $('#tripleDoubles').text(totalTD);
 
-          var gamesLegend = d3.select('#legend');
-          var foundGames = gamesLegend
-            .selectAll('li')
-            .data(gamesData, function (d) { return d.name + d.date; });
-          alert(gamesData[0].date);
-          alert(gamesData[gamesData.length - 1].date);
+          var xValue = function(d) { return d.date; },
+              xScale = d3.time.scale().range([0, width]),
+              xMap = function(d) { return xScale(xValue(d)); },
+              xAxis = d3.svg.axis().scale(xScale).tickFormat(customTimeFormat);
+          xScale.domain([d3.min(gamesData, xValue), d3.max(gamesData, xValue)]);
 
-          var x = d3.time.scale()
-            .domain([gamesData[0].date, gamesData[gamesData.length - 1].date])
-            .range([0, width]);
-
-          var xAxis = d3.svg.axis()
-              .scale(x)
-              .tickFormat(customTimeFormat);
+          var yValue = function(d) { return d.tdStreak || (-1 * d.notTDStreak); },
+              yScale = d3.scale.linear().range([height, 0]),
+              yMap = function(d) { return yScale(yValue(d)); },
+              yAxis = d3.svg.axis().scale(yScale);
+          yScale.domain([-1 * d3.max(gamesData, yValue), d3.max(gamesData, yValue)]);
 
           var svg = d3.select("#timeline")
-              //.append("svg")
               .attr("width", width + margin.left + margin.right)
               .attr("height", height + margin.top + margin.bottom)
             .append("g")
@@ -199,14 +195,51 @@
               .attr("transform", "translate(0," + height + ")")
               .call(xAxis);
 
+      //     
+      // .attr("class", "dot")
+      // 
+      // .style("fill", function(d) { return color(cValue(d));}) 
+      // .on("mouseover", function(d) {
+      //     tooltip.transition()
+      //          .duration(200)
+      //          .style("opacity", .9);
+      //     tooltip.html(d["Cereal Name"] + "<br/> (" + xValue(d) 
+	    //     + ", " + yValue(d) + ")")
+      //          .style("left", (d3.event.pageX + 5) + "px")
+      //          .style("top", (d3.event.pageY - 28) + "px");
+      // })
+      // .on("mouseout", function(d) {
+      //     tooltip.transition()
+      //          .duration(500)
+      //          .style("opacity", 0);
+      // });
+
+          var foundGames = svg
+            .selectAll('.game')
+            .data(gamesData, function (d) { return d.name + d.date; });
+
+          // scatter plot from here
+          // http://bl.ocks.org/weiglemc/6185069
           foundGames
             .enter()
-            .append('li')
+            .append('circle')
             .attr({
-              width: '100px',
-              height: '100px',
+              'r': 3.5,
+              'cx': xMap,
+              'cy': yMap,
+              'class': 'game',
             })
-            .html(function(di) { return di.name + ':' + di.points + ':' + di.rebounds + ':' + di.assists + ':' + di.isTD + ':' + di.tdStreak + ':' + di.notTDStreak + ':' + di.date; });
+            // .append('text')
+            // .html(function(di) {
+            //   return di.name + ':' +
+            //     di.points + ':' +
+            //     di.rebounds + ':' +
+            //     di.assists + ':' +
+            //     di.isTD + ':' +
+            //     di.tdStreak + ':' +
+            //     di.notTDStreak + ':' +
+            //     di.date;
+            //   });
 
           foundGames
             .exit()
