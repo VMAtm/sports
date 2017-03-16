@@ -10,11 +10,6 @@
       font: 20px Verdana;
     }
 
-    li {
-      list-style: none;
-      display: 'inline-block';
-    }
-
     .axis text {
       font: 10px sans-serif;
     }
@@ -57,6 +52,26 @@
       return new Date(parts[0], parts[1]-1, parts[2]); // Note: months are 0-based
     }
 
+    // http://colorbrewer2.org/
+    var blues = {
+      3:["#deebf7","#9ecae1","#3182bd"],
+      4:["#eff3ff","#bdd7e7","#6baed6","#2171b5"],
+      5:["#eff3ff","#bdd7e7","#6baed6","#3182bd","#08519c"],
+      6:["#eff3ff","#c6dbef","#9ecae1","#6baed6","#3182bd","#08519c"],
+      7:["#eff3ff","#c6dbef","#9ecae1","#6baed6","#4292c6","#2171b5","#084594"],
+      8:["#f7fbff","#deebf7","#c6dbef","#9ecae1","#6baed6","#4292c6","#2171b5","#084594"],
+      9:["#f7fbff","#deebf7","#c6dbef","#9ecae1","#6baed6","#4292c6","#2171b5","#08519c","#08306b"]
+    };
+    var reds = {
+      3:["#fee0d2","#fc9272","#de2d26"],
+      4:["#fee5d9","#fcae91","#fb6a4a","#cb181d"],
+      5:["#fee5d9","#fcae91","#fb6a4a","#de2d26","#a50f15"],
+      6:["#fee5d9","#fcbba1","#fc9272","#fb6a4a","#de2d26","#a50f15"],
+      7:["#fee5d9","#fcbba1","#fc9272","#fb6a4a","#ef3b2c","#cb181d","#99000d"],
+      8:["#fff5f0","#fee0d2","#fcbba1","#fc9272","#fb6a4a","#ef3b2c","#cb181d","#99000d"],
+      9:["#fff5f0","#fee0d2","#fcbba1","#fc9272","#fb6a4a","#ef3b2c","#cb181d","#a50f15","#67000d"]
+    };
+
     var vis = d3.select('#visualisation'),
       WIDTH = 900,
       HEIGHT = 300,
@@ -76,6 +91,25 @@
       ["%Y", function() { return true; }]
     ]);
 
+    var xValue = function(d) { return d.date; },
+        xScale = d3.time.scale().range([0, width]),
+        xMap = function(d) { return xScale(xValue(d)); },
+        xAxis = d3.svg.axis().scale(xScale).tickFormat(customTimeFormat);
+
+    var yValue = function(d) { return d.tdStreak || (-1 * d.notTDStreak); },
+        yScale = d3.scale.linear().range([height, 0]),
+        yMap = function(d) { return yScale(yValue(d)); },
+        yAxis = d3.svg.axis().scale(yScale);
+    var rValue = function(d) {
+      return (d.tdStreak || d.notTDStreak) * 2.5;
+    }
+    var cValue = function(d) {
+      if (d.tdStreak){
+        return blues[7][d.tdStreak - 1];
+      } else{
+        return reds[7][d.notTDStreak - 1];
+      }
+    }
     var formatTable = function(d, label, startX, startY, name) {
       var foundLabels = vis.selectAll('.' + label)
         .data(d, function (d) { return d.name + '' + d.value; });
@@ -99,8 +133,8 @@
         totalRebounds = 0,
         totalAssists = 0,
         totalTD = 0,
-        tdStreak = 0,
-        nottdStreak = 0;
+        currenttdStreak = 0,
+        currentNottdStreak = 0;
 
     var getGamesInfo = function(d) {
       var gamesNumber = d[0].headers.indexOf('MATCHUP')
@@ -124,18 +158,18 @@
         };
 
         if (resultG.isTD) {
-          if (nottdStreak) {
-            nottdStreak = 0;
-            tdStreak = 1;
+          if (currentNottdStreak) {
+            currentNottdStreak = 0;
+            currenttdStreak = 1;
           } else {
-            tdStreak += 1;
+            currenttdStreak += 1;
           }
         } else {
-          if (tdStreak) {
-            tdStreak = 0;
-            nottdStreak = 1;
+          if (currenttdStreak) {
+            currenttdStreak = 0;
+            currentNottdStreak = 1;
           } else {
-            nottdStreak += 1;
+            currentNottdStreak += 1;
           }
         }
 
@@ -150,8 +184,8 @@
         resultG.totalRebounds = totalRebounds;
         resultG.totalAssists = totalAssists;
         resultG.totalTD = totalTD;
-        resultG.tdStreak = tdStreak;
-        resultG.notTDStreak = nottdStreak;
+        resultG.tdStreak = currenttdStreak;
+        resultG.notTDStreak = currentNottdStreak;
 
         result.push(resultG);
       });
@@ -166,22 +200,12 @@
         type: 'GET',
         dataType: 'jsonp',
         success: function(result) {
-          var gamesDataHeaders = result.resultSets.headers;
           var gamesData = getGamesInfo(result.resultSets);
           var formattedData = getPlayerInfo(data, 82);
           
           $('#tripleDoubles').text(totalTD);
 
-          var xValue = function(d) { return d.date; },
-              xScale = d3.time.scale().range([0, width]),
-              xMap = function(d) { return xScale(xValue(d)); },
-              xAxis = d3.svg.axis().scale(xScale).tickFormat(customTimeFormat);
           xScale.domain([d3.min(gamesData, xValue), d3.max(gamesData, xValue)]);
-
-          var yValue = function(d) { return d.tdStreak || (-1 * d.notTDStreak); },
-              yScale = d3.scale.linear().range([height, 0]),
-              yMap = function(d) { return yScale(yValue(d)); },
-              yAxis = d3.svg.axis().scale(yScale);
           yScale.domain([-1 * d3.max(gamesData, yValue), d3.max(gamesData, yValue)]);
 
           var svg = d3.select("#timeline")
@@ -194,11 +218,12 @@
               .attr("class", "x axis")
               .attr("transform", "translate(0," + height + ")")
               .call(xAxis);
-
+          // svg.selectAll(".x text")
+          //     .attr("transform", function(d) {
+          //       return "translate(0," + height / 2 + ")";
+          //     });
       //     
-      // .attr("class", "dot")
-      // 
-      // .style("fill", function(d) { return color(cValue(d));}) 
+      // .attr("class", "dot") 
       // .on("mouseover", function(d) {
       //     tooltip.transition()
       //          .duration(200)
@@ -224,22 +249,12 @@
             .enter()
             .append('circle')
             .attr({
-              'r': 3.5,
+              'r': rValue,
               'cx': xMap,
               'cy': yMap,
               'class': 'game',
             })
-            // .append('text')
-            // .html(function(di) {
-            //   return di.name + ':' +
-            //     di.points + ':' +
-            //     di.rebounds + ':' +
-            //     di.assists + ':' +
-            //     di.isTD + ':' +
-            //     di.tdStreak + ':' +
-            //     di.notTDStreak + ':' +
-            //     di.date;
-            //   });
+            .style("fill", cValue);
 
           foundGames
             .exit()
