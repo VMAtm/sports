@@ -54,24 +54,25 @@
 
     // http://colorbrewer2.org/
     var blues = {
-      3:["#deebf7","#9ecae1","#3182bd"],
-      4:["#eff3ff","#bdd7e7","#6baed6","#2171b5"],
-      5:["#eff3ff","#bdd7e7","#6baed6","#3182bd","#08519c"],
-      6:["#eff3ff","#c6dbef","#9ecae1","#6baed6","#3182bd","#08519c"],
-      7:["#eff3ff","#c6dbef","#9ecae1","#6baed6","#4292c6","#2171b5","#084594"],
-      8:["#f7fbff","#deebf7","#c6dbef","#9ecae1","#6baed6","#4292c6","#2171b5","#084594"],
-      9:["#f7fbff","#deebf7","#c6dbef","#9ecae1","#6baed6","#4292c6","#2171b5","#08519c","#08306b"]
+      3:['#deebf7', '#9ecae1', '#3182bd'],
+      4:['#eff3ff', '#bdd7e7', '#6baed6', '#2171b5'],
+      5:['#eff3ff', '#bdd7e7', '#6baed6', '#3182bd', '#08519c'],
+      6:['#eff3ff', '#c6dbef', '#9ecae1', '#6baed6', '#3182bd', '#08519c'],
+      7:['#eff3ff', '#c6dbef', '#9ecae1', '#6baed6', '#4292c6', '#2171b5', '#084594'],
+      8:['#f7fbff', '#deebf7', '#c6dbef', '#9ecae1', '#6baed6', '#4292c6', '#2171b5', '#084594'],
+      9:['#f7fbff', '#deebf7', '#c6dbef', '#9ecae1', '#6baed6', '#4292c6', '#2171b5', '#08519c', '#08306b']
     };
     var reds = {
-      3:["#fee0d2","#fc9272","#de2d26"],
-      4:["#fee5d9","#fcae91","#fb6a4a","#cb181d"],
-      5:["#fee5d9","#fcae91","#fb6a4a","#de2d26","#a50f15"],
-      6:["#fee5d9","#fcbba1","#fc9272","#fb6a4a","#de2d26","#a50f15"],
-      7:["#fee5d9","#fcbba1","#fc9272","#fb6a4a","#ef3b2c","#cb181d","#99000d"],
-      8:["#fff5f0","#fee0d2","#fcbba1","#fc9272","#fb6a4a","#ef3b2c","#cb181d","#99000d"],
-      9:["#fff5f0","#fee0d2","#fcbba1","#fc9272","#fb6a4a","#ef3b2c","#cb181d","#a50f15","#67000d"]
+      3:['#fee0d2', '#fc9272', '#de2d26'],
+      4:['#fee5d9', '#fcae91', '#fb6a4a', '#cb181d'],
+      5:['#fee5d9', '#fcae91', '#fb6a4a', '#de2d26', '#a50f15'],
+      6:['#fee5d9', '#fcbba1', '#fc9272', '#fb6a4a', '#de2d26', '#a50f15'],
+      7:['#fee5d9', '#fcbba1', '#fc9272', '#fb6a4a', '#ef3b2c', '#cb181d', '#99000d'],
+      8:['#fff5f0', '#fee0d2', '#fcbba1', '#fc9272', '#fb6a4a', '#ef3b2c', '#cb181d', '#99000d'],
+      9:['#fff5f0', '#fee0d2', '#fcbba1', '#fc9272', '#fb6a4a', '#ef3b2c', '#cb181d', '#a50f15', '#67000d']
     };
-
+    var nbaBlue = '#006bb6',
+        nbaRed = '#ed174c';
     var vis = d3.select('#visualisation'),
       WIDTH = 900,
       HEIGHT = 300,
@@ -81,14 +82,14 @@
 
     // sample from https://bl.ocks.org/mbostock/4149176
     var customTimeFormat = d3.time.format.multi([
-      [".%L", function(d) { return d.getMilliseconds(); }],
-      [":%S", function(d) { return d.getSeconds(); }],
-      ["%I:%M", function(d) { return d.getMinutes(); }],
-      ["%I %p", function(d) { return d.getHours(); }],
-      ["%a %d", function(d) { return d.getDay() && d.getDate() != 1; }],
-      ["%b %d", function(d) { return d.getDate() != 1; }],
-      ["%B", function(d) { return d.getMonth(); }],
-      ["%Y", function() { return true; }]
+      ['.%L', function(d) { return d.getMilliseconds(); }],
+      [':%S', function(d) { return d.getSeconds(); }],
+      ['%I:%M', function(d) { return d.getMinutes(); }],
+      ['%I %p', function(d) { return d.getHours(); }],
+      ['%a %d', function(d) { return d.getDay() && d.getDate() != 1; }],
+      ['%b %d', function(d) { return d.getDate() != 1; }],
+      ['%B', function(d) { return d.getMonth(); }],
+      ['%Y', function() { return true; }]
     ]);
 
     var xValue = function(d) { return d.date; },
@@ -96,20 +97,20 @@
         xMap = function(d) { return xScale(xValue(d)); },
         xAxis = d3.svg.axis().scale(xScale).tickFormat(customTimeFormat);
 
-    var yValue = function(d) { return d.tdStreak || (-1 * d.notTDStreak); },
+    var yValue = function(d) { return d.isTD ? d.tdStreak : -1 * d.notTDStreak; },
         yScale = d3.scale.linear().range([height, 0]),
         yMap = function(d) { return yScale(yValue(d)); },
         yAxis = d3.svg.axis().scale(yScale);
     var rValue = function(d) {
-      return (d.tdStreak || d.notTDStreak) * 2.5;
-    }
+      return (d.isTD ? d.tdStreak : d.notTDStreak) * 2.5;
+    };
     var cValue = function(d) {
-      if (d.tdStreak){
-        return blues[7][d.tdStreak - 1];
-      } else{
-        return reds[7][d.notTDStreak - 1];
+      if (d.isTD) {
+        return nbaRed;
+      } else {
+        return nbaBlue;
       }
-    }
+    };
     var formatTable = function(d, label, startX, startY, name) {
       var foundLabels = vis.selectAll('.' + label)
         .data(d, function (d) { return d.name + '' + d.value; });
@@ -125,6 +126,54 @@
         .html(function(di) { return di[name]; });
       foundLabels.exit().remove();
     };
+    var opacityValue = function (d) {
+      return ((d.isTD ? d.tdStreak : d.notTDStreak) / 2 + 7) / 10
+    };
+
+    var svg = d3
+      .select('#timeline')
+        .attr('width', width + margin.left + margin.right)
+        .attr('height', height + margin.top + margin.bottom)
+      .append('g')
+        .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
+    svg
+      .append('rect')
+      .attr({
+        x: - margin.left / 2,
+        y: -1,
+        width: width + margin.left,
+        height: height / 2,
+        fill: nbaBlue,
+      });
+    svg
+      .append('rect')
+      .attr({
+        x: - margin.left / 2,
+        y: height / 2,
+        width: width + margin.left,
+        height: height / 2,
+        fill: nbaRed,
+      });
+
+    svg.append('text')
+      .attr({
+        x: width - margin.left * 1.6,
+        y: margin.top / 3,
+        dy: '.35em',
+        fill: 'white',
+      })
+      .style('text-anchor', 'start')
+      .text('Трипл-дабл');
+    svg.append('text')
+      .attr({
+        x: width - margin.left * 2,
+        y: height - margin.top / 3,
+        dy: '.35em',
+        fill: 'white',
+      })
+      .style('text-anchor', 'start')
+      .text('Обычная игра');
 
     var data = null;
 
@@ -208,20 +257,10 @@
           xScale.domain([d3.min(gamesData, xValue), d3.max(gamesData, xValue)]);
           yScale.domain([-1 * d3.max(gamesData, yValue), d3.max(gamesData, yValue)]);
 
-          var svg = d3.select("#timeline")
-              .attr("width", width + margin.left + margin.right)
-              .attr("height", height + margin.top + margin.bottom)
-            .append("g")
-              .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-          svg.append("g")
-              .attr("class", "x axis")
-              .attr("transform", "translate(0," + height + ")")
+          svg.append('g')
+              .attr('class', 'x axis')
+              .attr('transform', 'translate(0,' + (height + 5) + ')')
               .call(xAxis);
-          // svg.selectAll(".x text")
-          //     .attr("transform", function(d) {
-          //       return "translate(0," + height / 2 + ")";
-          //     });
       //     
       // .attr("class", "dot") 
       // .on("mouseover", function(d) {
@@ -253,8 +292,9 @@
               'cx': xMap,
               'cy': yMap,
               'class': 'game',
-            })
-            .style("fill", cValue);
+              'fill': cValue,
+              'fill-opacity': opacityValue
+            });
 
           foundGames
             .exit()
