@@ -27,15 +27,11 @@
   <div class="container">
     <div class="row">
       <div class="col-xs-12">
+        <svg id="bigNumber" width="900" height="300" />
         <svg id="timeline" />        
         <div class="row">
-          <div class="col-xs-7">
-            <svg id="visualisation" width="700" height="700" />
-          </div>
-          <div class="col-xs-5">
-            Трипл-даблов: <span id="tripleDoubles"></span>
-            <ul id="legend">
-            </ul>
+          <div class="col-xs-12">
+            <svg id="visualisation" width="900" height="400" />
           </div>
         </div>
       </div>
@@ -71,12 +67,34 @@
       8:['#fff5f0', '#fee0d2', '#fcbba1', '#fc9272', '#fb6a4a', '#ef3b2c', '#cb181d', '#99000d'],
       9:['#fff5f0', '#fee0d2', '#fcbba1', '#fc9272', '#fb6a4a', '#ef3b2c', '#cb181d', '#a50f15', '#67000d']
     };
-    var nbaBlue = '#006bb6',
-        nbaRed = '#ed174c';
+    var
+      margin = { top: 40, right: 40, bottom: 40, left: 40 },
+      nbaBlue = '#006bb6',
+      nbaRed = '#ed174c',
+      okBlue = '#397cb0',
+      okYellow = '#faac3d';
+
+    var bn = d3.select('#bigNumber'),
+      BN_WIDTH = 700,
+      BN_HEIGHT = 200;
+    bn
+      .attr('width', BN_WIDTH)
+      .attr('height',BN_HEIGHT);
+    bn
+      .append('text')
+      .attr({
+        x: BN_WIDTH / 2 + margin.left,
+        y: margin.top + margin.bottom,
+        dy: '.6em',
+      })
+      .style({
+        'text-anchor': 'start',
+        'font-size': '110'
+      });
+
     var vis = d3.select('#visualisation'),
       WIDTH = 900,
       HEIGHT = 300,
-      margin = { top: 40, right: 40, bottom: 40, left: 40 },
       width = WIDTH - margin.left - margin.right,
       height = HEIGHT - margin.top - margin.bottom;
 
@@ -129,6 +147,17 @@
     var opacityValue = function (d) {
       return ((d.isTD ? d.tdStreak : d.notTDStreak) / 2 + 7) / 10
     };
+    // donut chart from here https://bl.ocks.org/mbostock/3887193
+    var radius = BN_HEIGHT / 2;
+    var arcBlue = d3.svg.arc()
+        .outerRadius(radius - 10)
+        .innerRadius(radius - 15);
+    var arcYellow = d3.svg.arc()
+        .outerRadius(radius - 25)
+        .innerRadius(radius - 30);
+    // transparent color idea from here https://developers.google.com/chart/interactive/docs/gallery/piechart
+    var pie = d3.layout.pie()
+        .sort(null);
 
     var svg = d3
       .select('#timeline')
@@ -183,7 +212,9 @@
         totalAssists = 0,
         totalTD = 0,
         currenttdStreak = 0,
-        currentNottdStreak = 0;
+        currentNottdStreak = 0,
+        totalHomeTD = 0,
+        totalWinTD = 0;
 
     var getGamesInfo = function(d) {
       var gamesNumber = d[0].headers.indexOf('MATCHUP')
@@ -198,12 +229,13 @@
         var resultG = {
           id: index,
           name: game[gamesNumber],
-          wl: game[wlNumber] == 'Y',
+          wl: game[wlNumber] == 'W',
           points: game[pointsNumber],
           rebounds: game[reboundsNumber],
           assists: game[assistsNumber],
           date: parseDate(game[dateNumber]),
           isTD: (game[pointsNumber] >= 10 && game[reboundsNumber] >= 10 && game[assistsNumber] >= 10),
+          atHome: game[gamesNumber].indexOf('@') == -1
         };
 
         if (resultG.isTD) {
@@ -226,7 +258,11 @@
         totalPoints += resultG.points;
         totalRebounds += resultG.rebounds;
         totalAssists += resultG.assists;
-        totalTD += 1 * resultG.isTD;
+        if (resultG.isTD) {
+          totalTD += 1;
+          totalHomeTD += 1 * resultG.atHome;
+          totalWinTD += 1 * resultG.wl;
+        }
 
         resultG.totalGames = totalGames;
         resultG.totalPoints = totalPoints;
@@ -251,16 +287,51 @@
         success: function(result) {
           var gamesData = getGamesInfo(result.resultSets);
           var formattedData = getPlayerInfo(data, 82);
-          
-          $('#tripleDoubles').text(totalTD);
+
+          var gb = bn
+            .selectAll('.arcBlue')
+            .data(pie([totalHomeTD, totalTD - totalHomeTD]));
+          gb
+            .enter()
+            .append('g')
+            .attr('class', 'arcBlue');
+          gb
+            .append('path')
+            .attr({
+              'transform': 'translate(' + (margin.left * 2.5 + BN_WIDTH / 2) + ',' + (margin.top / 7 + BN_HEIGHT / 2) + ')',
+              'd': arcBlue
+            })
+            .style('fill', function(d, i) { return i == 0 ? okBlue : 'transparent'; });
+
+          var gy = bn
+            .selectAll('.arcYellow')
+            .data(pie([totalWinTD, totalTD - totalWinTD]));
+          gy
+            .enter()
+            .append('g')
+            .attr('class', 'arcYellow');
+          gy
+            .append('path')
+            .attr({
+              'transform': 'translate(' + (margin.left * 2.5 + BN_WIDTH / 2) + ',' + (margin.top / 7 + BN_HEIGHT / 2) + ')',
+              'd': arcYellow
+            })
+            .style('fill', function(d, i) { return i == 0 ? okYellow : 'transparent'; });
+
+          bn
+            .select('text')
+            // .attr({
+            //   "transform": "translate(" + BN_WIDTH / 2 + "," + BN_HEIGHT / 2 + ")"
+            // })
+            .text(totalTD);
 
           xScale.domain([d3.min(gamesData, xValue), d3.max(gamesData, xValue)]);
           yScale.domain([-1 * d3.max(gamesData, yValue), d3.max(gamesData, yValue)]);
 
           svg.append('g')
-              .attr('class', 'x axis')
-              .attr('transform', 'translate(0,' + (height + 5) + ')')
-              .call(xAxis);
+            .attr('class', 'x axis')
+            .attr('transform', 'translate(0,' + (height + 5) + ')')
+            .call(xAxis);
       //     
       // .attr("class", "dot") 
       // .on("mouseover", function(d) {
@@ -310,20 +381,20 @@
             })
             .html(formattedData.name);
 
-          formatTable(formattedData.total, 'infoTotalLabels', 50, 250, 'name');
-          formatTable(formattedData.total, 'infoTotal', 230, 250, 'value');
+          formatTable(formattedData.total, 'infoTotalLabels', 50, 50, 'name');
+          formatTable(formattedData.total, 'infoTotal', 230, 50, 'value');
           
-          formatTable(formattedData.perGame, 'infoPerGameLabels', 370, 250, 'name');
-          formatTable(formattedData.perGame, 'infoPerGame', 560, 250, 'value');
+          formatTable(formattedData.perGame, 'infoPerGameLabels', 370, 50, 'name');
+          formatTable(formattedData.perGame, 'infoPerGame', 560, 50, 'value');
           
-          formatTable(formattedData.leftToScore, 'infoLeftLabels', 50, 370, 'name');
-          formatTable(formattedData.leftToScore, 'infoLeft', 230, 370, 'value');
+          formatTable(formattedData.leftToScore, 'infoLeftLabels', 50, 170, 'name');
+          formatTable(formattedData.leftToScore, 'infoLeft', 230, 170, 'value');
           
-          formatTable(formattedData.rythm, 'infoRythmLabels', 370, 370, 'name');
-          formatTable(formattedData.rythm, 'infoRythm', 560, 370, 'value');
+          formatTable(formattedData.rythm, 'infoRythmLabels', 370, 170, 'name');
+          formatTable(formattedData.rythm, 'infoRythm', 560, 170, 'value');
 
-          formatTable(formattedData.perGameLeft, 'infoPerGameLeftLabels', 50, 490, 'name');
-          formatTable(formattedData.perGameLeft, 'infoPerGameLeft', 230, 490, 'value');
+          formatTable(formattedData.perGameLeft, 'infoPerGameLeftLabels', 50, 290, 'name');
+          formatTable(formattedData.perGameLeft, 'infoPerGameLeft', 230, 290, 'value');
 
         },
         error: function (xhr, ajaxOptions, thrownError) {
