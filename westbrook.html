@@ -17,10 +17,23 @@
     .axis line,
     .axis path {
       fill: none;
-      stroke: #000;
+      stroke: black;
       shape-rendering: crispEdges;
     }
 
+    .tooltip {
+      position: absolute;
+      width: 150px;
+      height: 70px;
+      pointer-events: none;
+      background-color: white;
+      stroke: black;
+      color: black;
+    }
+
+    .game {
+      stroke: black;
+    }
   </style>
 </head>
 <body>
@@ -73,13 +86,23 @@
       nbaRed = '#ed174c',
       okBlue = '#397cb0',
       okYellow = '#faac3d';
+    
+    // add the tooltip area to the webpage
+    // code from here http://bl.ocks.org/weiglemc/6185069
+    var tooltip = d3
+      .select('body')
+      .append('div')
+      .attr({ class: 'tooltip' })
+      .style({ opacity: 0 });
 
     var bn = d3.select('#bigNumber'),
       BN_WIDTH = 700,
       BN_HEIGHT = 200;
     bn
-      .attr('width', BN_WIDTH)
-      .attr('height',BN_HEIGHT);
+      .attr({
+        width: BN_WIDTH,
+        height: BN_HEIGHT
+      });
     bn
       .append('text')
       .attr({
@@ -169,10 +192,14 @@
 
     var svg = d3
       .select('#timeline')
-        .attr('width', width + margin.left + margin.right)
-        .attr('height', height + margin.top + margin.bottom)
+        .attr({
+          width: width + margin.left + margin.right,
+          height: height + margin.top + margin.bottom
+        })
       .append('g')
-        .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+        .attr({
+          transform: 'translate(' + margin.left + ',' + margin.top + ')'
+        });
 
     svg
       .append('rect')
@@ -346,7 +373,7 @@
                 : '';
             })
             .attr('dy', '.35em')
-            .text(function(d, i) { return i == 0 ? d.data + ' дома' : ''; });
+            .text(function(d, i) { return i == 0 ? d.data + ' в домашних играх' : ''; });
 
           bn
             .select('text')
@@ -359,22 +386,13 @@
             .attr('class', 'x axis')
             .attr('transform', 'translate(0,' + (height + 5) + ')')
             .call(xAxis);
-      //     
-      // .attr("class", "dot") 
+
       // .on("mouseover", function(d) {
-      //     tooltip.transition()
-      //          .duration(200)
-      //          .style("opacity", .9);
       //     tooltip.html(d["Cereal Name"] + "<br/> (" + xValue(d) 
 	    //     + ", " + yValue(d) + ")")
       //          .style("left", (d3.event.pageX + 5) + "px")
       //          .style("top", (d3.event.pageY - 28) + "px");
       // })
-      // .on("mouseout", function(d) {
-      //     tooltip.transition()
-      //          .duration(500)
-      //          .style("opacity", 0);
-      // });
 
           var foundGames = svg
             .selectAll('.game')
@@ -386,12 +404,46 @@
             .enter()
             .append('circle')
             .attr({
-              'r': rValue,
-              'cx': xMap,
-              'cy': yMap,
-              'class': 'game',
-              'fill': cValue,
+              r: rValue,
+              cx: xMap,
+              cy: yMap,
+              class: 'game',
+              fill: cValue,
               'fill-opacity': opacityValue
+            })
+            .on('mouseover', function(d) {
+              // http://stackoverflow.com/a/23703180/213550
+              d3.select(this)
+                .style({
+                  stroke: '#fff'
+                });
+              tooltip
+                .transition()
+                .duration(200)
+                .style({
+                  opacity: .9,
+                  stroke: '#fff',
+                });
+              tooltip
+                .html(d.name + ' (' + d.date.getFullYear() + '-' + (d.date.getMonth() + 1) + '-' + d.date.getDate() + ')<br />' +
+                  '<br />В матче ' + d.points + '-' + d.rebounds + '-' + d.assists +
+                  '<br />Всего ' + d.totalPoints + '-' + d.totalRebounds + '-' + d.totalAssists)
+                .style({
+                  left: (d3.event.pageX + 5) + 'px',
+                  top: (d3.event.pageY - 28) + 'px'
+                });
+            })
+            .on('mouseout', function(d) {
+              d3.select(this)
+                .style({
+                  stroke: '#000'
+                });
+              tooltip
+                .transition()
+                .duration(500)
+                .style({
+                  opacity: 0
+                });
             });
 
           foundGames
