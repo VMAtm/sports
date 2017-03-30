@@ -85,7 +85,9 @@
       nbaBlue = '#006bb6',
       nbaRed = '#ed174c',
       okBlue = '#397cb0',
-      okYellow = '#faac3d';
+      okYellow = '#faac3d',
+      dashBoardHeight = 400,
+      dashBoardWidth = 400;
     
     // add the tooltip area to the webpage
     // code from here http://bl.ocks.org/weiglemc/6185069
@@ -145,7 +147,6 @@
         xScale = d3.time.scale().range([0, width]),
         xMap = function(d) { return xScale(xValue(d)); },
         xAxis = d3.svg.axis().scale(xScale).tickFormat(customTimeFormat);
-
     var yValue = function(d) { return d.isTD ? d.tdStreak : -1 * d.notTDStreak; },
         yScale = d3.scale.linear().range([height, 0]),
         yMap = function(d) { return yScale(yValue(d)); },
@@ -160,21 +161,6 @@
         return nbaBlue;
       }
     };
-    var formatTable = function(d, label, startX, startY, name) {
-      var foundLabels = vis.selectAll('.' + label)
-        .data(d, function (d) { return d.name + '' + d.value; });
-      foundLabels
-        .enter()
-        .append('text')
-        .attr({
-          x: startX,
-          y: function (di, i) { return startY + i * 20 + (i != 0) * 5; },
-          dy: '.35em',
-          class: 'label'
-        })
-        .html(function(di) { return di[name]; });
-      foundLabels.exit().remove();
-    };
     var opacityValue = function (d) {
       return ((d.isTD ? d.tdStreak : d.notTDStreak) / 2 + 7) / 10
     };
@@ -188,7 +174,8 @@
         .innerRadius(radius - 22);
     // transparent color idea from here https://developers.google.com/chart/interactive/docs/gallery/piechart
     var pie = d3.layout.pie()
-        .sort(null);
+        .sort(null)
+        .value(function(d) { return d.value; });
 
     var svg = d3
       .select('#timeline')
@@ -262,7 +249,7 @@
       var result = [];
       d[0].rowSet.reverse().forEach(function(game, index) {
         var resultG = {
-          id: index,
+          id: index + 1,
           name: game[gamesNumber],
           wl: game[wlNumber] == 'W',
           points: game[pointsNumber],
@@ -323,9 +310,13 @@
           var gamesData = getGamesInfo(result.resultSets);
           var formattedData = getPlayerInfo(data, 82);
 
+          var blueData = [
+            { value: totalWinTD, color: okBlue, text: totalWinTD + ' в победных матчах' },
+            { value: totalTD - totalWinTD, color: 'transparent', text: '' }
+          ];
           var gb = bn
             .selectAll('.arcBlue')
-            .data(pie([totalWinTD, totalTD - totalWinTD]));
+            .data(pie(blueData));
           gb
             .enter()
             .append('g')
@@ -337,7 +328,7 @@
                                           (margin.top / 7 + BN_HEIGHT / 2) + ') rotate(170)',
               'd': arcBlue
             })
-            .style('fill', function(d, i) { return i == 0 ? okBlue : 'transparent'; });
+            .style('fill', function(d) { return d.data.color; });
           gb.append('text')
             .attr('transform', function(d, i) {
               return i == 0 
@@ -346,15 +337,15 @@
                 : '';
             })
             .attr('dy', '.35em')
-            .text(function(d, i) {
-              return i == 0 
-                ? d.data + ' в победных матчах'
-                : '';
-            });
+            .text(function(d) { return d.data.text; });
 
+          var yellowData = [
+            { value: totalHomeTD, color: okYellow, text: totalHomeTD + ' в домашних играх' },
+            { value: totalTD - totalHomeTD, color: 'transparent', text: '' }
+          ];
           var gy = bn
             .selectAll('.arcYellow')
-            .data(pie([totalHomeTD, totalTD - totalHomeTD]));
+            .data(pie(yellowData));
           gy
             .enter()
             .append('g')
@@ -365,15 +356,16 @@
               'transform': 'translate(' + (margin.left * 2.5 + BN_WIDTH / 2) + ',' + (margin.top / 7 + BN_HEIGHT / 2) + ') rotate(30)',
               'd': arcYellow
             })
-            .style('fill', function(d, i) { return i == 0 ? okYellow : 'transparent'; });
+            .style('fill', function(d) { return d.data.color; });
           gy.append('text')
             .attr('transform', function(d, i) { 
               return i == 0 
-                ? 'translate(' + (margin.left * 2 + BN_WIDTH / 2) + ',' + (margin.top * 1.3 + BN_HEIGHT / 2) + ') translate(' + arcYellow.centroid(d) + ')'
+                ? 'translate(' + (margin.left * 2 + BN_WIDTH / 2) + ',' +
+                                 (margin.top * 1.3 + BN_HEIGHT / 2) + ') translate(' + arcYellow.centroid(d) + ')'
                 : '';
             })
             .attr('dy', '.35em')
-            .text(function(d, i) { return i == 0 ? d.data + ' в домашних играх' : ''; });
+            .text(function(d) { return d.data.text; });
 
           bn
             .select('text')
@@ -386,13 +378,6 @@
             .attr('class', 'x axis')
             .attr('transform', 'translate(0,' + (height + 5) + ')')
             .call(xAxis);
-
-      // .on("mouseover", function(d) {
-      //     tooltip.html(d["Cereal Name"] + "<br/> (" + xValue(d) 
-	    //     + ", " + yValue(d) + ")")
-      //          .style("left", (d3.event.pageX + 5) + "px")
-      //          .style("top", (d3.event.pageY - 28) + "px");
-      // })
 
           var foundGames = svg
             .selectAll('.game')
@@ -417,11 +402,12 @@
                 .style({
                   stroke: '#fff'
                 });
+              showGame(d);
               tooltip
                 .transition()
                 .duration(200)
                 .style({
-                  opacity: .9,
+                  opacity: 1,
                   stroke: '#fff',
                 });
               tooltip
@@ -481,6 +467,38 @@
         },
       });
     });
+
+    var formatTable = function(d, label, startX, startY, name) {
+      var foundLabels = vis
+        .selectAll('.' + label)
+        .data(d, function (d) { return d.name + '' + d.value; });
+      foundLabels
+        .enter()
+        .append('text')
+        .attr({
+          x: startX,
+          y: function (di, i) { return startY + i * 20 + (i != 0) * 5; },
+          dy: '.35em',
+          class: 'label'
+        })
+        .html(function(di) { return di[name]; });
+      foundLabels.exit().remove();
+    };
+
+    var showGame = function(d) {
+      var xGame = d3.scale.ordinal()
+        .rangeRoundBands([0, dashBoardWidth], .25);
+      var yGame = d3.scale.linear()
+        .range([dashBoardHeight, 0]);
+      var xAxisGame = d3.svg.axis()
+          .scale(xGame)
+          .orient('bottom')
+          .tickFormat(function (d) { return ''; });
+      var yAxisGame = d3.svg.axis()
+          .scale(yGame)
+          .orient('left')
+          .ticks(5);
+    }
 
     var getPlayerInfo = function(d, seasonGames) {
       var result = { name: 'Russell Westbrook' };
