@@ -72,7 +72,9 @@
       // new Date(year, month [, day [, hours[, minutes[, seconds[, ms]]]]])
       return new Date(parts[0], parts[1]-1, parts[2]); // Note: months are 0-based
     }
-
+    function getDateFormat(date) {
+      return date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate()
+    }
     // http://colorbrewer2.org/
     var blues = {
       3:['#deebf7', '#9ecae1', '#3182bd'],
@@ -98,7 +100,7 @@
       nbaRed = '#ed174c',
       okBlue = '#397cb0',
       okYellow = '#faac3d',
-      dashBoardHeight = 300,
+      dashBoardHeight = 200,
       dashBoardWidth = 300;
     
     // add the tooltip area to the webpage
@@ -164,7 +166,7 @@
         yMap = function(d) { return yScale(yValue(d)); },
         yAxis = d3.svg.axis().scale(yScale);
     var rValue = function(d) {
-      return (d.isTD ? d.tdStreak : d.notTDStreak) * 2.5;
+      return 5;  // * (d.isTD ? d.tdStreak : d.notTDStreak);
     };
     var cValue = function(d) {
       if (d.isTD) {
@@ -222,7 +224,7 @@
     svg
       .append('text')
       .attr({
-        x: width - margin.left * 1.6,
+        x: -margin.left / 3,
         y: margin.top / 3,
         dy: '.35em',
         fill: 'white',
@@ -423,6 +425,7 @@
                 .style({ stroke: '#fff' });
 
               showGame(d);
+              showGameAverages(d);
 
               tooltip
                 .transition()
@@ -432,7 +435,7 @@
                   stroke: '#fff',
                 });
               tooltip
-                .html(d.name + ' (' + d.date.getFullYear() + '-' + (d.date.getMonth() + 1) + '-' + d.date.getDate() + ')<br />' +
+                .html(d.name + ' (' + getDateFormat(d.date) + ')<br />' +
                   '<br />В матче ' + d.points + '-' + d.rebounds + '-' + d.assists +
                   '<br />Всего ' + d.totalPoints + '-' + d.totalRebounds + '-' + d.totalAssists)
                 .style({
@@ -518,17 +521,21 @@
       var yAxisGame = d3.svg.axis()
         .scale(yGame)
         .orient('left')
-        .ticks(5);
+        .ticks(4);
       var data = [
-        { text: 'Очки', value: game.points },
-        { text: 'Подборы', value: game.rebounds },
-        { text: 'Передачи', value: game.assists },
+        { text: 'Очки', value: game.points, name: game.name, date: game.date },
+        { text: 'Подборы', value: game.rebounds, name: game.name, date: game.date },
+        { text: 'Передачи', value: game.assists, name: game.name, date: game.date },
       ];
       xGame.domain(data.map(function(d) { return d.text; }));
       yGame.domain([0, d3.max(data, function(d) { return d.value; } )]);
       
       var game = d3.select('#game');      
       
+      game
+        .selectAll('line')
+        .remove();
+
       game
         .attr({
           width: dashBoardWidth,
@@ -561,7 +568,10 @@
 
       var gameStats = game
         .selectAll('.barGame')
-        .data(data, function (d) { return d.text + '|' + d.value + '|' + game.name + '|' + game.date });
+        .data(data, gamekey);
+      var gameStatLabels = game
+        .selectAll('.barGameLabel')
+        .data(data, gamekey);
       
       gameStats
         .enter()
@@ -574,16 +584,146 @@
           height: function(d) { return gameHeight - yGame(d.value); },
           class: 'barGame',
         })
+
+      gameStatLabels
+        .enter()
         .append('text')
         .attr({
-          x: function(d) { return xGame(d.text) + gameMargins.left; },
-          y: function(d) { return yGame(d.value); },
+          x: function(d) { return xGame(d.text) + xGame.rangeBand() / 2 + gameMargins.left / 2 + (d.value > 10 ? 2 : 6); },
+          y: function(d) { return gameMargins.top + gameMargins.bottom; },
           dy: '.35em',
-          color: nbaRed,
+          class: 'barGameLabel'
         })
-        .text(function(d) { return d.text; });
+        .attr('font-weight', 'bold')
+        .text(function(d) { return d.value; });
+
+      game
+        .append('line')
+        .attr({
+          x1: gameMargins.left,
+          x2: dashBoardWidth - gameMargins.right,
+          y1: Math.floor(yGame(10)) + gameMargins.top,
+          y2: Math.floor(yGame(10)) + gameMargins.top,
+          stroke: nbaRed,
+          'stroke-width': 2,
+        });
 
       gameStats
+        .exit()
+        .remove();
+      gameStatLabels
+        .exit()
+        .remove();
+    }
+
+    var gamekey = function (d) { return d.text + '|' + d.value + '|' + game.name + '|' + getDateFormat(d.date); };
+
+    var showGameAverages = function(gameA) {
+      var gameAverageMargins = { left: 20, top: 20, right: 20, bottom: 20, };
+      var gameAverageWidth = dashBoardWidth - gameAverageMargins.left - gameAverageMargins.right,
+          gameAverageHeight = dashBoardHeight - gameAverageMargins.top - gameAverageMargins.bottom;
+
+      var xGameA = d3.scale.ordinal()
+        .rangeRoundBands([0, gameAverageWidth], .25);
+      var yGameA = d3.scale.linear()
+        .range([gameAverageHeight, 0]);
+      var xAxisGameA = d3.svg.axis()
+        .scale(xGameA)
+        .orient('bottom');
+      var yAxisGameA = d3.svg.axis()
+        .scale(yGameA)
+        .orient('left')
+        .ticks(4);
+      var data = [
+        { text: 'Очки', value: gameA.totalPoints / gameA.id, name: gameA.name, date: gameA.date },
+        { text: 'Подборы', value: gameA.totalRebounds / gameA.id, name: gameA.name, date: gameA.date },
+        { text: 'Передачи', value: gameA.totalAssists / gameA.id, name: gameA.name, date: gameA.date },
+      ];
+      xGameA.domain(data.map(function(d) { return d.text; }));
+      yGameA.domain([0, d3.max(data, function(d) { return d.value; } )]);
+
+      var gameA = d3.select('#average');      
+      
+      gameA
+        .selectAll('line')
+        .remove();
+
+      gameA
+        .attr({
+          width: dashBoardWidth,
+          height: dashBoardHeight
+        })
+        .append('g')
+        .attr({
+          transform: 'translate(' + gameAverageMargins.left + ',' + gameAverageMargins.top + ')'
+        });
+      
+      gameA
+        .selectAll('.x')
+        .remove();
+
+      gameA
+        .append('g')
+        .attr('class', 'x axis')
+        .attr('transform', 'translate(' + gameAverageMargins.left + ',' + (gameAverageHeight + gameAverageMargins.top) + ')')
+        .call(xAxisGameA);
+      
+      gameA
+        .selectAll('.y')
+        .remove();
+
+      gameA
+        .append('g')
+        .attr('class', 'y axis')
+        .attr('transform', 'translate(' + gameAverageMargins.left + ',' + gameAverageMargins.top + ')')
+        .call(yAxisGameA);
+
+      var gameStatsA = gameA
+        .selectAll('.barGame')
+        .data(data, gamekey);
+      var gameStatLabelsA = gameA
+        .selectAll('.barGameLabel')
+        .data(data, gamekey);
+      
+      gameStatsA
+        .enter()
+        .append('rect')
+        .style('fill', okYellow)
+        .attr({
+          x: function(d) { return xGameA(d.text) + gameAverageMargins.left; },
+          y: function(d) { return yGameA(d.value) + gameAverageMargins.top; },
+          width: xGameA.rangeBand(),
+          height: function(d) { return gameAverageHeight - yGameA(d.value); },
+          class: 'barGame',
+        })
+
+      gameStatLabelsA
+        .enter()
+        .append('text')
+        .attr({
+          x: function(d) { return xGameA(d.text) + xGameA.rangeBand() / 2 + gameAverageMargins.left / 2 + (d.value > 10 ? 0 : 2); },
+          y: function(d) { return gameAverageMargins.top + gameAverageMargins.bottom; },
+          dy: '.35em',
+          class: 'barGameLabel'
+        })
+        .attr('font-weight', 'bold')
+        .text(function(d) { return d.value.toFixed(1); });
+
+      gameA
+        .append('line')
+        .attr({
+          x1: gameAverageMargins.left,
+          x2: dashBoardWidth - gameAverageMargins.right,
+          y1: Math.floor(yGameA(10)) + gameAverageMargins.top,
+          y2: Math.floor(yGameA(10)) + gameAverageMargins.top,
+          stroke: okBlue,
+          'stroke-width': 2,
+        });
+
+      gameStatsA
+        .exit()
+        .remove();
+      gameStatLabelsA
         .exit()
         .remove();
     }
