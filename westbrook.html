@@ -248,6 +248,8 @@
         totalPoints = 0,
         totalRebounds = 0,
         totalAssists = 0,
+        totalSteals = 0,
+        totalBlocks = 0,
         totalTD = 0,
         currenttdStreak = 0,
         currentNottdStreak = 0,
@@ -260,6 +262,8 @@
         , pointsNumber = d[0].headers.indexOf('PTS')
         , reboundsNumber = d[0].headers.indexOf('REB')
         , dateNumber = d[0].headers.indexOf('GAME_DATE')
+        , blocksNumber = d[0].headers.indexOf('BLK')
+        , stealsNumber = d[0].headers.indexOf('STL')
         , assistsNumber = d[0].headers.indexOf('AST');
 
       var result = [];
@@ -271,6 +275,8 @@
           points: game[pointsNumber],
           rebounds: game[reboundsNumber],
           assists: game[assistsNumber],
+          blocks: game[blocksNumber],
+          steals: game[stealsNumber],
           date: parseDate(game[dateNumber]),
           isTD: (game[pointsNumber] >= 10 && game[reboundsNumber] >= 10 && game[assistsNumber] >= 10),
           atHome: game[gamesNumber].indexOf('@') == -1
@@ -296,6 +302,8 @@
         totalPoints += resultG.points;
         totalRebounds += resultG.rebounds;
         totalAssists += resultG.assists;
+        totalBlocks += resultG.blocks;
+        totalSteals += resultG.steals;
         if (resultG.isTD) {
           totalTD += 1;
           totalHomeTD += 1 * resultG.atHome;
@@ -306,6 +314,8 @@
         resultG.totalPoints = totalPoints;
         resultG.totalRebounds = totalRebounds;
         resultG.totalAssists = totalAssists;
+        resultG.totalSteals = totalSteals
+        resultG.totalBlocks = totalBlocks;
         resultG.totalTD = totalTD;
         resultG.tdStreak = currenttdStreak;
         resultG.notTDStreak = currentNottdStreak;
@@ -425,7 +435,7 @@
                 .style({ stroke: '#fff' });
 
               showGame(d);
-              showGameAverages(d);
+              showGameToGo(d);
 
               tooltip
                 .transition()
@@ -506,6 +516,7 @@
       foundLabels.exit().remove();
     };
 
+    // simple chart http://bl.ocks.org/d3noob/8952219
     var showGame = function(game) {
       var gameMargins = { left: 20, top: 20, right: 20, bottom: 20, };
       var gameWidth = dashBoardWidth - gameMargins.left - gameMargins.right,
@@ -521,7 +532,7 @@
       var yAxisGame = d3.svg.axis()
         .scale(yGame)
         .orient('left')
-        .ticks(4);
+        .ticks(0);
       var data = [
         { text: 'Очки', value: game.points, name: game.name, date: game.date },
         { text: 'Подборы', value: game.rebounds, name: game.name, date: game.date },
@@ -618,112 +629,112 @@
 
     var gamekey = function (d) { return d.text + '|' + d.value + '|' + game.name + '|' + getDateFormat(d.date); };
 
-    var showGameAverages = function(gameA) {
-      var gameAverageMargins = { left: 20, top: 20, right: 20, bottom: 20, };
-      var gameAverageWidth = dashBoardWidth - gameAverageMargins.left - gameAverageMargins.right,
-          gameAverageHeight = dashBoardHeight - gameAverageMargins.top - gameAverageMargins.bottom;
+    var showGameToGo = function(gameTG) {
+      var gameTGMargins = { left: 30, top: 20, right: 20, bottom: 20, };
+      var gameTGWidth = dashBoardWidth - gameTGMargins.left - gameTGMargins.right,
+          gameTGHeight = dashBoardHeight - gameTGMargins.top - gameTGMargins.bottom;
 
-      var xGameA = d3.scale.ordinal()
-        .rangeRoundBands([0, gameAverageWidth], .25);
-      var yGameA = d3.scale.linear()
-        .range([gameAverageHeight, 0]);
-      var xAxisGameA = d3.svg.axis()
-        .scale(xGameA)
+      var xGameTG = d3.scale.ordinal()
+        .rangeRoundBands([0, gameTGWidth], .25);
+      var yGameTG = d3.scale.linear()
+        .range([gameTGHeight, 0]);
+      var xAxisGameTG = d3.svg.axis()
+        .scale(xGameTG)
         .orient('bottom');
-      var yAxisGameA = d3.svg.axis()
-        .scale(yGameA)
+      var yAxisGameTG = d3.svg.axis()
+        .scale(yGameTG)
         .orient('left')
-        .ticks(4);
+        .ticks(0);
       var data = [
-        { text: 'Очки', value: gameA.totalPoints / gameA.id, name: gameA.name, date: gameA.date },
-        { text: 'Подборы', value: gameA.totalRebounds / gameA.id, name: gameA.name, date: gameA.date },
-        { text: 'Передачи', value: gameA.totalAssists / gameA.id, name: gameA.name, date: gameA.date },
+        { text: 'Очки', value: gameTG.totalPoints, name: gameTG.name, date: gameTG.date },
+        { text: 'Подборы', value: gameTG.totalRebounds, name: gameTG.name, date: gameTG.date },
+        { text: 'Передачи', value: gameTG.totalAssists, name: gameTG.name, date: gameTG.date },
       ];
-      xGameA.domain(data.map(function(d) { return d.text; }));
-      yGameA.domain([0, d3.max(data, function(d) { return d.value; } )]);
+      xGameTG.domain(data.map(function(d) { return d.text; }));
+      yGameTG.domain([0, 820]);
 
-      var gameA = d3.select('#average');      
+      var gameTGvis = d3.select('#average');
       
-      gameA
+      gameTGvis
         .selectAll('line')
         .remove();
 
-      gameA
+      gameTGvis
         .attr({
           width: dashBoardWidth,
           height: dashBoardHeight
         })
         .append('g')
         .attr({
-          transform: 'translate(' + gameAverageMargins.left + ',' + gameAverageMargins.top + ')'
+          transform: 'translate(' + gameTGMargins.left + ',' + gameTGMargins.top + ')'
         });
       
-      gameA
+      gameTGvis
         .selectAll('.x')
         .remove();
 
-      gameA
+      gameTGvis
         .append('g')
         .attr('class', 'x axis')
-        .attr('transform', 'translate(' + gameAverageMargins.left + ',' + (gameAverageHeight + gameAverageMargins.top) + ')')
-        .call(xAxisGameA);
+        .attr('transform', 'translate(' + gameTGMargins.left + ',' + (gameTGHeight + gameTGMargins.top) + ')')
+        .call(xAxisGameTG);
       
-      gameA
+      gameTGvis
         .selectAll('.y')
         .remove();
 
-      gameA
+      gameTGvis
         .append('g')
         .attr('class', 'y axis')
-        .attr('transform', 'translate(' + gameAverageMargins.left + ',' + gameAverageMargins.top + ')')
-        .call(yAxisGameA);
+        .attr('transform', 'translate(' + gameTGMargins.left + ',' + gameTGMargins.top + ')')
+        .call(yAxisGameTG);
 
-      var gameStatsA = gameA
+      var gameStatsTG = gameTGvis
         .selectAll('.barGame')
         .data(data, gamekey);
-      var gameStatLabelsA = gameA
+      var gameStatLabelsTG = gameTGvis
         .selectAll('.barGameLabel')
         .data(data, gamekey);
       
-      gameStatsA
+      gameStatsTG
         .enter()
         .append('rect')
         .style('fill', okYellow)
         .attr({
-          x: function(d) { return xGameA(d.text) + gameAverageMargins.left; },
-          y: function(d) { return yGameA(d.value) + gameAverageMargins.top; },
-          width: xGameA.rangeBand(),
-          height: function(d) { return gameAverageHeight - yGameA(d.value); },
+          x: function(d) { return xGameTG(d.text) + gameTGMargins.left; },
+          y: function(d) { return yGameTG(Math.min(d.value, 820)) + gameTGMargins.top; },
+          width: xGameTG.rangeBand(),
+          height: function(d) { return gameTGHeight - yGameTG(Math.min(d.value, 820)); },
           class: 'barGame',
         })
 
-      gameStatLabelsA
+      gameStatLabelsTG
         .enter()
         .append('text')
         .attr({
-          x: function(d) { return xGameA(d.text) + xGameA.rangeBand() / 2 + gameAverageMargins.left / 2 + (d.value > 10 ? 0 : 2); },
-          y: function(d) { return gameAverageMargins.top + gameAverageMargins.bottom; },
+          x: function(d) { return xGameTG(d.text) + xGameTG.rangeBand() / 2 + gameTGMargins.left / 2 + (d.value > 1000 ? -2 : 0); },
+          y: function(d) { return gameTGMargins.top + gameTGMargins.bottom; },
           dy: '.35em',
           class: 'barGameLabel'
         })
         .attr('font-weight', 'bold')
-        .text(function(d) { return d.value.toFixed(1); });
+        .text(function(d) { return d.value; });
 
-      gameA
+      gameTGvis
         .append('line')
         .attr({
-          x1: gameAverageMargins.left,
-          x2: dashBoardWidth - gameAverageMargins.right,
-          y1: Math.floor(yGameA(10)) + gameAverageMargins.top,
-          y2: Math.floor(yGameA(10)) + gameAverageMargins.top,
+          x1: gameTGMargins.left,
+          x2: dashBoardWidth - gameTGMargins.right,
+          y1: Math.floor(yGameTG(820)) + gameTGMargins.top,
+          y2: Math.floor(yGameTG(820)) + gameTGMargins.top,
           stroke: okBlue,
           'stroke-width': 2,
         });
 
-      gameStatsA
+      gameStatsTG
         .exit()
         .remove();
-      gameStatLabelsA
+      gameStatLabelsTG
         .exit()
         .remove();
     }
