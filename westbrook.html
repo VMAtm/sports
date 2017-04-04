@@ -541,13 +541,16 @@
       xGame.domain(data.map(function(d) { return d.text; }));
       yGame.domain([0, d3.max(data, function(d) { return d.value; } )]);
       
-      var game = d3.select('#game');      
+      var gameV = d3.select('#game');      
       
-      game
+      gameV
         .selectAll('line')
         .remove();
+      gameV
+        .selectAll('text')
+        .remove();
 
-      game
+      gameV
         .attr({
           width: dashBoardWidth,
           height: dashBoardHeight
@@ -557,30 +560,43 @@
           transform: 'translate(' + gameMargins.left + ',' + gameMargins.top + ')'
         });
       
-      game
+      gameV
         .selectAll('.x')
         .remove();
 
-      game
+      gameV
         .append('g')
-        .attr('class', 'x axis')
-        .attr('transform', 'translate(' + gameMargins.left + ',' + (gameHeight + gameMargins.top) + ')')
+        .attr({
+          class: 'x axis',
+          transform: 'translate(' + gameMargins.left + ',' + (gameHeight + gameMargins.top) + ')'
+        })
         .call(xAxisGame);
       
-      game
+      gameV
         .selectAll('.y')
         .remove();
 
-      game
+      gameV
         .append('g')
         .attr('class', 'y axis')
         .attr('transform', 'translate(' + gameMargins.left + ',' + gameMargins.top + ')')
-        .call(yAxisGame);
+        .call(yAxisGame)       
+        .append('text')
+        .attr({
+          x: -5,
+          y: yGame(10),
+          dy: '.71em',
+        })
+        .style({
+          'font-weight': 'bold',
+          'text-anchor': 'end',
+        })
+        .text('10');
 
-      var gameStats = game
+      var gameStats = gameV
         .selectAll('.barGame')
         .data(data, gamekey);
-      var gameStatLabels = game
+      var gameStatLabels = gameV
         .selectAll('.barGameLabel')
         .data(data, gamekey);
       
@@ -603,12 +619,12 @@
           x: function(d) { return xGame(d.text) + xGame.rangeBand() / 2 + gameMargins.left / 2 + (d.value > 10 ? 2 : 6); },
           y: function(d) { return gameMargins.top + gameMargins.bottom; },
           dy: '.35em',
-          class: 'barGameLabel'
+          class: 'barGameLabel',
+          'font-weight': 'bold',
         })
-        .attr('font-weight', 'bold')
         .text(function(d) { return d.value; });
 
-      game
+      gameV
         .append('line')
         .attr({
           x1: gameMargins.left,
@@ -618,6 +634,19 @@
           stroke: nbaRed,
           'stroke-width': 2,
         });
+      gameV
+        .append('text')
+        .attr({
+          x: dashBoardWidth / 2 + gameMargins.left + gameMargins.right,
+          y: 5,
+          dy: '.35em',
+          width: dashBoardWidth,
+        })
+        .style({
+          'font-weight': 'bold',
+          'text-anchor': 'end',
+        })
+        .text(game.name);
 
       gameStats
         .exit()
@@ -658,6 +687,9 @@
       gameTGvis
         .selectAll('line')
         .remove();
+      gameTGvis
+        .selectAll('text')
+        .remove();
 
       gameTGvis
         .attr({
@@ -668,6 +700,18 @@
         .attr({
           transform: 'translate(' + gameTGMargins.left + ',' + gameTGMargins.top + ')'
         });
+      gameTGvis
+        .append('text')
+        .attr({
+          x: dashBoardWidth / 1.5 + gameTGMargins.left,
+          y: 5,
+          dy: '.35em',
+        })
+        .style({
+          'font-weight': 'bold',
+          'text-anchor': 'end',
+        })
+        .text('Трипл-дабл в среднем');
       
       gameTGvis
         .selectAll('.x')
@@ -715,9 +759,9 @@
           x: function(d) { return xGameTG(d.text) + xGameTG.rangeBand() / 2 + gameTGMargins.left / 2 + (d.value > 1000 ? -2 : 0); },
           y: function(d) { return gameTGMargins.top + gameTGMargins.bottom; },
           dy: '.35em',
-          class: 'barGameLabel'
+          class: 'barGameLabel',
+          'font-weight': 'bold',
         })
-        .attr('font-weight', 'bold')
         .text(function(d) { return d.value; });
 
       gameTGvis
