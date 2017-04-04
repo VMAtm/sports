@@ -402,7 +402,7 @@
             .text(totalTD);
 
           xScale.domain([d3.min(gamesData, xValue), d3.max(gamesData, xValue)]);
-          yScale.domain([-1 * d3.max(gamesData, yValue), d3.max(gamesData, yValue)]);
+          yScale.domain([-1 * d3.max(gamesData, yValue) - 1, d3.max(gamesData, yValue) + 1]);
 
           svg.append('g')
             .attr({
