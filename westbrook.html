@@ -22,6 +22,12 @@
       shape-rendering: crispEdges;
     }
 
+    .grid .tick {
+        stroke: lightgrey;
+        stroke-opacity: 0.7;
+        shape-rendering: crispEdges;
+    }
+
     .tooltip {
       position: absolute;
       width: 150px;
@@ -67,12 +73,13 @@
   http://stats.nba.com/stats/leaguegamefinder?Conference=&DateFrom=&DateTo=&Division=&DraftNumber=&DraftRound=&DraftYear=&GB=N&LeagueID=00&Location=&Outcome=&PlayerID=201566&PlayerOrTeam=P&Season=2016-17&SeasonType=Regular+Season&StatCategory=PTS&TeamID=&VsConference=&VsDivision=&VsTeamID=
   <button onclick="return recount();">Пересчитать</button>-->
   <script type="text/javascript">
-    function parseDate(input) {
+    var parseDate = function(input) {
       var parts = input.split('-');
       // new Date(year, month [, day [, hours[, minutes[, seconds[, ms]]]]])
       return new Date(parts[0], parts[1]-1, parts[2]); // Note: months are 0-based
     }
-    function getDateFormat(date) {
+
+    var getDateFormat = function(date) {
       return date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate()
     }
     // http://colorbrewer2.org/
@@ -91,7 +98,7 @@
       5:['#fee5d9', '#fcae91', '#fb6a4a', '#de2d26', '#a50f15'],
       6:['#fee5d9', '#fcbba1', '#fc9272', '#fb6a4a', '#de2d26', '#a50f15'],
       7:['#fee5d9', '#fcbba1', '#fc9272', '#fb6a4a', '#ef3b2c', '#cb181d', '#99000d'],
-      8:['#fff5f0', '#fee0d2', '#fcbba1', '#fc9272', '#fb6a4a', '#ef3b2c', '#cb181d', '#99000d'],
+      8:['#fff5f0', '#fe e0d2', '#fcbba1', '#fc9272', '#fb6a4a', '#ef3b2c', '#cb181d', '#99000d'],
       9:['#fff5f0', '#fee0d2', '#fcbba1', '#fc9272', '#fb6a4a', '#ef3b2c', '#cb181d', '#a50f15', '#67000d']
     };
     var
@@ -130,14 +137,6 @@
         'text-anchor': 'start',
         'font-size': '110'
       });
-    bn
-      .append('text')
-      .attr({
-        x: BN_WIDTH / 2 + margin.left * 1.4,
-        y: margin.top * 3 + margin.bottom - 5,
-        dy: '.35em',
-      })
-      .text('трипл-даблов');
 
     var vis = d3.select('#visualisation'),
       WIDTH = 900,
@@ -175,7 +174,7 @@
         return nbaBlue;
       }
     };
-    var opacityValue = function (d) {
+    var opacityValue = function(d) {
       return ((d.isTD ? d.tdStreak : d.notTDStreak) / 2 + 7) / 10
     };
     // donut chart from here https://bl.ocks.org/mbostock/3887193
@@ -190,6 +189,27 @@
     var pie = d3.layout.pie()
         .sort(null)
         .value(function(d) { return d.value; });
+    var makeXAxisGrid = function() {
+      return d3.svg.axis()
+        .scale(xScale)
+        .orient('bottom');
+    }
+    var textByValue = function(number) {
+      if (number >= 11 && number <= 19) {
+        return 'трипл-даблов';
+      }
+      var mod = number % 10;
+      switch (mod) {
+        case 1:
+          return 'трипл-дабл';
+        case 2:
+        case 3:
+        case 4:
+          return 'трипл-дабла';
+        default:
+          return 'трипл-даблов';      
+      }
+    }
 
     var svg = d3
       .select('#timeline')
@@ -220,27 +240,6 @@
         height: height / 2,
         fill: nbaRed,
       });
-
-    svg
-      .append('text')
-      .attr({
-        x: -margin.left / 3,
-        y: margin.top / 3,
-        dy: '.35em',
-        fill: 'white',
-      })
-      .style('text-anchor', 'start')
-      .text('Трипл-дабл');
-    svg
-      .append('text')
-      .attr({
-        x: width - margin.left * 2,
-        y: height - margin.top / 3,
-        dy: '.35em',
-        fill: 'white',
-      })
-      .style('text-anchor', 'start')
-      .text('Обычная игра');
 
     var data = null;
 
@@ -327,7 +326,7 @@
 
     var uriPlayer = 'http://stats.nba.com/stats/playercareerstats?LeagueID=00&PerMode=Totals&PlayerID=201566';
     var uriGames = 'http://stats.nba.com/stats/leaguegamefinder?GB=N&LeagueID=00&PlayerID=201566&PlayerOrTeam=P&Season=2016-17&SeasonType=Regular+Season&StatCategory=PTS';
-    $(document).ready(function () {
+    $(document).ready(function() {
       $.ajax({
         url: uriGames,
         type: 'GET',
@@ -400,11 +399,52 @@
           bn
             .select('text')
             .text(totalTD);
+          bn
+            .append('text')
+            .attr({
+              x: BN_WIDTH / 2 + margin.left * 1.6,
+              y: margin.top * 3 + margin.bottom - 5,
+              dy: '.35em',
+            })
+            .text(textByValue(totalTD));
 
           xScale.domain([d3.min(gamesData, xValue), d3.max(gamesData, xValue)]);
           yScale.domain([-1 * d3.max(gamesData, yValue) - 1, d3.max(gamesData, yValue) + 1]);
 
-          svg.append('g')
+          svg
+            .append('g')
+            .attr({
+              class: 'grid',
+              transform: 'translate(0,' + height + ')'
+            })
+            .call(makeXAxisGrid()
+              .tickSize(-height, 0, 0)
+              .tickFormat('')
+            );
+
+          svg
+            .append('text')
+            .attr({
+              x: -margin.left / 3,
+              y: margin.top / 3,
+              dy: '.35em',
+              fill: 'white',
+            })
+            .style('text-anchor', 'start')
+            .text('Трипл-дабл');
+          svg
+            .append('text')
+            .attr({
+              x: width - margin.left * 2,
+              y: height - margin.top / 3,
+              dy: '.35em',
+              fill: 'white',
+            })
+            .style('text-anchor', 'start')
+            .text('Обычная игра');
+
+          svg
+            .append('g')
             .attr({
               class: 'x axis',
               transform: 'translate(0,' + (height + 5) + ')'
@@ -413,7 +453,7 @@
 
           var foundGames = svg
             .selectAll('.game')
-            .data(gamesData, function (d) { return d.name + d.date; });
+            .data(gamesData, function(d) { return d.name + d.date; });
 
           // scatter plot from here
           // http://bl.ocks.org/weiglemc/6185069
@@ -435,6 +475,7 @@
                 .style({ stroke: '#fff' });
 
               showGame(d);
+              showAverage(d);
               showGameToGo(d);
 
               tooltip
@@ -493,7 +534,7 @@
           formatTable(formattedData.perGameLeft, 'infoPerGameLeft', 230, 290, 'value');
 
         },
-        error: function (xhr, ajaxOptions, thrownError) {
+        error: function(xhr, ajaxOptions, thrownError) {
           alert(thrownError);
         },
       });
@@ -502,13 +543,13 @@
     var formatTable = function(d, label, startX, startY, name) {
       var foundLabels = vis
         .selectAll('.' + label)
-        .data(d, function (d) { return d.name + '' + d.value; });
+        .data(d, function(d) { return d.name + '' + d.value; });
       foundLabels
         .enter()
         .append('text')
         .attr({
           x: startX,
-          y: function (di, i) { return startY + i * 20 + (i != 0) * 5; },
+          y: function(di, i) { return startY + i * 20 + (i != 0) * 5; },
           dy: '.35em',
           class: 'label'
         })
@@ -656,7 +697,23 @@
         .remove();
     }
 
-    var gamekey = function (d) { return d.text + '|' + d.value + '|' + game.name + '|' + getDateFormat(d.date); };
+    var showAverage = function(gameA) {
+      var gameAvMargins = { left: 30, top: 20, right: 20, bottom: 20, };
+      var gameAvWidth = dashBoardWidth - gameAvMargins.left - gameAvMargins.right,
+          gameAvHeight = dashBoardHeight - gameAvMargins.top - gameAvMargins.bottom;
+      var data = [
+        { text: 'Очки', value: (gameA.totalPoints / gameA.id).toFixed(1) },
+        { text: 'Подборы', value: (gameA.totalRebounds / gameA.id).toFixed(1) },
+        { text: 'Блокшоты', value: (gameA.totalBlocks / gameA.id).toFixed(1) },
+        { text: 'Перехваты', value: (gameA.totalSteals / gameA.id).toFixed(1) },
+        { text: 'Передачи', value: (gameA.totalAssists / gameA.id).toFixed(1) },
+      ];
+      //data.map(function(d) { alert(d.text + ':' + d.value); })
+    }
+
+    var gamekey = function(d) {
+      return d.text + '|' + d.value + '|' + game.name + '|' + getDateFormat(d.date);
+    };
 
     var showGameToGo = function(gameTG) {
       var gameTGMargins = { left: 30, top: 20, right: 20, bottom: 20, };
