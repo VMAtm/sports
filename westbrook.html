@@ -701,14 +701,60 @@
       var gameAvMargins = { left: 30, top: 20, right: 20, bottom: 20, };
       var gameAvWidth = dashBoardWidth - gameAvMargins.left - gameAvMargins.right,
           gameAvHeight = dashBoardHeight - gameAvMargins.top - gameAvMargins.bottom;
-      var data = [
+      var dataAv = [
         { text: 'Очки', value: (gameA.totalPoints / gameA.id).toFixed(1) },
         { text: 'Подборы', value: (gameA.totalRebounds / gameA.id).toFixed(1) },
         { text: 'Блокшоты', value: (gameA.totalBlocks / gameA.id).toFixed(1) },
         { text: 'Перехваты', value: (gameA.totalSteals / gameA.id).toFixed(1) },
         { text: 'Передачи', value: (gameA.totalAssists / gameA.id).toFixed(1) },
       ];
-      //data.map(function(d) { alert(d.text + ':' + d.value); })
+      var webOptions = {
+        radius: 5,
+        levels: 4,
+        width: dashBoardWidth,
+        height: dashBoardHeight,
+        radians: 2 * Math.PI,
+      };
+      var gameAvVis = d3.select('#web');
+
+      gameAvVis
+        .selectAll('line')
+        .remove();
+      gameAvVis
+        .attr({
+          width: webOptions.width,
+          height: webOptions.height,
+        })
+        .append('g')
+        .attr({
+          transform: 'translate(' + gameAvMargins.left + ',' + gameAvMargins.top + ')',
+        });
+
+      //Circular segments
+      for (var j = 0; j < webOptions.levels - 1; ++j) {
+        var levelFactor = radius * ((j + 1) / webOptions.levels);
+        
+        var circleLines = gameAvVis
+          .selectAll('.levels')
+          .data(dataAv, function(d) { return d.text + '' + j; });
+        
+        circleLines
+          .enter()
+          .append('line')
+          .attr({
+            x1: function(d, i) { return levelFactor * (1 - Math.sin(i * webOptions.radians / dataAv.length)); },
+            y1: function(d, i) { return levelFactor * (1 - Math.cos(i * webOptions.radians / dataAv.length)); },
+            x2: function(d, i) { return levelFactor * (1 - Math.sin((i + 1) * webOptions.radians / dataAv.length)); },
+            y2: function(d, i) { return levelFactor * (1 - Math.cos((i + 1) * webOptions.radians / dataAv.length)); },
+            class: 'line',
+            transform: 'translate(' + (webOptions.width / 2 - levelFactor) + ', ' + (webOptions.height / 2 - levelFactor) + ')',
+          })
+          .style({
+            stroke: 'grey',
+            'stroke-opacity': .75 + (j + 2) * .05,
+            'stroke-width': '0.4px',
+          });
+      }
     }
 
     var gamekey = function(d) {
