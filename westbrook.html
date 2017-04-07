@@ -763,7 +763,7 @@
             .append('text')
             .attr({
               x: function(d) { return levelFactor * (1 - Math.sin(Math.PI * webOptions.factorLegend)); },
-              y: function(d) { return (10 - j * 4.5) + levelFactor * (1 - Math.cos(Math.PI * webOptions.factorLegend)); },
+              y: function(d) { return (10 - j * 2.9) + levelFactor * (1 - Math.cos(Math.PI * webOptions.factorLegend)); },
               class: 'legend',
               transform: toCenter,
               fill: '#737373',
@@ -808,7 +808,7 @@
             x: function(d, i) { return axisFactor *
               (1 - Math.sin(i * webOptions.radians / dataAv.length)) - 30 * Math.sin(i * webOptions.radians / dataAv.length); },
             y: function(d, i) { return axisFactor *
-              (1 - Math.cos(i * webOptions.radians / dataAv.length)) - 15 * Math.cos(i * webOptions.radians / dataAv.length); },
+              (1 - Math.cos(i * webOptions.radians / dataAv.length)) - 10 * Math.cos(i * webOptions.radians / dataAv.length); },
             class: 'legend',
             dy: '1.5em',
             transform: toCenter,
