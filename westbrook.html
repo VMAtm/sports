@@ -709,16 +709,20 @@
         { text: 'Передачи', value: (gameA.totalAssists / gameA.id).toFixed(1) },
       ];
       var webOptions = {
-        radius: dashBoardWidth / 2 - gameAvMargins.top,
+        radius: dashBoardWidth / 2 - gameAvMargins.top - gameAvMargins.bottom,
         levels: 4,
         width: dashBoardWidth,
         height: dashBoardHeight,
         radians: 2 * Math.PI,
+        factorLegend: 6 / 7
       };
       var gameAvVis = d3.select('#web');
 
       gameAvVis
         .selectAll('line')
+        .remove();
+      gameAvVis
+        .selectAll('text')
         .remove();
       gameAvVis
         .attr({
@@ -758,18 +762,68 @@
             .enter()
             .append('text')
             .attr({
-              x: function(d) { return levelFactor * (1 - Math.sin(Math.PI * 6 / 7)); },
-              y: function(d) { return (10 - j * 4.5) + levelFactor * (1 - Math.cos(Math.PI * 6 / 7)); },
+              x: function(d) { return levelFactor * (1 - Math.sin(Math.PI * webOptions.factorLegend)); },
+              y: function(d) { return (10 - j * 4.5) + levelFactor * (1 - Math.cos(Math.PI * webOptions.factorLegend)); },
               class: 'legend',
               transform: toCenter,
-              fill: '#737373'
+              fill: '#737373',
             })
             .style({
               'font-family': 'sans-serif',
-              'font-size': '10px'
+              'font-size': '10px',
             })
             .text(((j + 1) * 10).toFixed(1));
         }
+
+        var axis = gameAvVis
+          .selectAll('.axis')
+          .data(dataAv);
+        var axisFactor = webOptions.radius * (webOptions.levels - 1) / webOptions.levels;
+        var toCenter = 'translate(' + (webOptions.width / 2 - axisFactor) + ', ' + (webOptions.height / 2 - axisFactor) + ')';
+
+        axis
+          .enter()
+          .append('g')
+          .attr({ class: 'axis' });
+
+        axis
+          .append('line')
+          .attr({
+            x1: webOptions.radius - gameAvMargins.left + 2,
+            y1: dashBoardHeight / 2 - gameAvMargins.top + 2,
+            x2: function(d, i) { return axisFactor * (1 - Math.sin(i * webOptions.radians / dataAv.length)); },
+            y2: function(d, i) { return axisFactor * (1 - Math.cos(i * webOptions.radians / dataAv.length)); },
+            class: 'line',
+            transform: toCenter,
+          })
+          .style({
+            stroke: 'grey',
+            'stroke-width': '1px',
+          });
+
+        var toCenter = 'translate(' + (webOptions.width / 2 - axisFactor) + ', ' + (webOptions.height / 2 - axisFactor - gameAvMargins.top / 2) + ')';
+        axis
+          .append('text')
+          .attr({
+            x: function(d, i) { return axisFactor *
+              (1 - Math.sin(i * webOptions.radians / dataAv.length)) - 30 * Math.sin(i * webOptions.radians / dataAv.length); },
+            y: function(d, i) { return axisFactor *
+              (1 - Math.cos(i * webOptions.radians / dataAv.length)) - 15 * Math.cos(i * webOptions.radians / dataAv.length); },
+            class: 'legend',
+            dy: '1.5em',
+            transform: toCenter,
+            //  transform: function(d, i) { return "translate(0, -10)"; },
+            'text-anchor': 'middle',
+          })
+          .style({
+            'font-size': '11px',
+            'font-family': 'sans-serif',
+          })
+          .text(function(d) { return d.text });
+
+        axis
+          .exit()
+          .remove();
     }
 
     var gamekey = function(d) {
