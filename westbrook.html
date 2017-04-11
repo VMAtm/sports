@@ -138,7 +138,7 @@
         'font-size': '110'
       });
 
-    var vis = d3.select('#visualisation'),
+    var
       WIDTH = 900,
       HEIGHT = 300,
       width = WIDTH - margin.left - margin.right,
@@ -518,20 +518,20 @@
             })
             .html(formattedData.name);
 
-          formatTable(formattedData.total, 'infoTotalLabels', 50, 50, 'name');
-          formatTable(formattedData.total, 'infoTotal', 230, 50, 'value');
+          // formatTable(formattedData.total, 'infoTotalLabels', 50, 50, 'name');
+          // formatTable(formattedData.total, 'infoTotal', 230, 50, 'value');
           
-          formatTable(formattedData.perGame, 'infoPerGameLabels', 370, 50, 'name');
-          formatTable(formattedData.perGame, 'infoPerGame', 560, 50, 'value');
+          // formatTable(formattedData.perGame, 'infoPerGameLabels', 370, 50, 'name');
+          // formatTable(formattedData.perGame, 'infoPerGame', 560, 50, 'value');
           
-          formatTable(formattedData.leftToScore, 'infoLeftLabels', 50, 170, 'name');
-          formatTable(formattedData.leftToScore, 'infoLeft', 230, 170, 'value');
+          // formatTable(formattedData.leftToScore, 'infoLeftLabels', 50, 170, 'name');
+          // formatTable(formattedData.leftToScore, 'infoLeft', 230, 170, 'value');
           
-          formatTable(formattedData.rythm, 'infoRythmLabels', 370, 170, 'name');
-          formatTable(formattedData.rythm, 'infoRythm', 560, 170, 'value');
+          // formatTable(formattedData.rythm, 'infoRythmLabels', 370, 170, 'name');
+          // formatTable(formattedData.rythm, 'infoRythm', 560, 170, 'value');
 
-          formatTable(formattedData.perGameLeft, 'infoPerGameLeftLabels', 50, 290, 'name');
-          formatTable(formattedData.perGameLeft, 'infoPerGameLeft', 230, 290, 'value');
+          // formatTable(formattedData.perGameLeft, 'infoPerGameLeftLabels', 50, 290, 'name');
+          // formatTable(formattedData.perGameLeft, 'infoPerGameLeft', 230, 290, 'value');
 
         },
         error: function(xhr, ajaxOptions, thrownError) {
@@ -540,22 +540,22 @@
       });
     });
 
-    var formatTable = function(d, label, startX, startY, name) {
-      var foundLabels = vis
-        .selectAll('.' + label)
-        .data(d, function(d) { return d.name + '' + d.value; });
-      foundLabels
-        .enter()
-        .append('text')
-        .attr({
-          x: startX,
-          y: function(di, i) { return startY + i * 20 + (i != 0) * 5; },
-          dy: '.35em',
-          class: 'label'
-        })
-        .html(function(di) { return di[name]; });
-      foundLabels.exit().remove();
-    };
+    // var formatTable = function(d, label, startX, startY, name) {
+    //   var foundLabels = vis
+    //     .selectAll('.' + label)
+    //     .data(d, function(d) { return d.name + '' + d.value; });
+    //   foundLabels
+    //     .enter()
+    //     .append('text')
+    //     .attr({
+    //       x: startX,
+    //       y: function(di, i) { return startY + i * 20 + (i != 0) * 5; },
+    //       dy: '.35em',
+    //       class: 'label'
+    //     })
+    //     .html(function(di) { return di[name]; });
+    //   foundLabels.exit().remove();
+    // };
 
     // simple chart http://bl.ocks.org/d3noob/8952219
     var showGame = function(game) {
@@ -932,7 +932,7 @@
       gameTGvis
         .append('text')
         .attr({
-          x: dashBoardWidth / 1.5 + gameTGMargins.left,
+          x: dashBoardWidth / 1.467 + gameTGMargins.left,
           y: 5,
           dy: '.35em',
         })
