@@ -469,8 +469,8 @@
                 .select(this)
                 .style({ stroke: '#fff' });
 
-              showGame(d);
               showAverage(d);
+              showGame(d);
               showGameToGo(d);
 
               tooltip
@@ -553,74 +553,74 @@
     // };
 
     // simple chart http://bl.ocks.org/d3noob/8952219
-    var showGame = function(game) {
-      var gameMargins = { left: 20, top: 20, right: 20, bottom: 20, };
-      var gameWidth = dashBoardWidth - gameMargins.left - gameMargins.right,
-          gameHeight = dashBoardHeight - gameMargins.top - gameMargins.bottom;
+    var showAverage = function(gameAv) {
+      var gameAvMargins = { left: 20, top: 20, right: 20, bottom: 20, };
+      var gameAvWidth = dashBoardWidth - gameAvMargins.left - gameAvMargins.right,
+          gameAvHeight = dashBoardHeight - gameAvMargins.top - gameAvMargins.bottom;
 
-      var xGame = d3.scale.ordinal()
-        .rangeRoundBands([0, gameWidth], .25);
-      var yGame = d3.scale.linear()
-        .range([gameHeight, 0]);
-      var xAxisGame = d3.svg.axis()
-        .scale(xGame)
+      var data = [
+        { text: 'Очки', value: gameAv.totalPoints / gameAv.id, name: gameAv.name, date: gameAv.date },
+        { text: 'Подборы', value: gameAv.totalRebounds / gameAv.id, name: gameAv.name, date: gameAv.date },
+        { text: 'Передачи', value: gameAv.totalAssists / gameAv.id, name: gameAv.name, date: gameAv.date },
+      ];
+      var xAvGame = d3.scale.ordinal()
+        .rangeRoundBands([0, gameAvWidth], .25);
+      var yAvGame = d3.scale.linear()
+        .range([gameAvHeight, 0]);
+      var xAvAxisGame = d3.svg.axis()
+        .scale(xAvGame)
         .orient('bottom');
-      var yAxisGame = d3.svg.axis()
-        .scale(yGame)
+      var yAvAxisGame = d3.svg.axis()
+        .scale(yAvGame)
         .orient('left')
         .ticks(0);
-      var data = [
-        { text: 'Очки', value: (game.totalPoints / game.id).toFixed(1), name: game.name, date: game.date },
-        { text: 'Подборы', value: (game.totalRebounds / game.id).toFixed(1), name: game.name, date: game.date },
-        { text: 'Передачи', value: (game.totalAssists / game.id).toFixed(1), name: game.name, date: game.date },
-      ];
-      xGame.domain(data.map(function(d) { return d.text; }));
-      yGame.domain([0, d3.max(data, function(d) { return d.value; } )]);
+      xAvGame.domain(data.map(function(d) { return d.text; }));
+      yAvGame.domain([0, d3.max(data, function(d) { return d.value; } )]);
       
-      var gameV = d3.select('#game');      
+      var gameAvV = d3.select('#game');      
       
-      gameV
+      gameAvV
         .selectAll('line')
         .remove();
-      gameV
+      gameAvV
         .selectAll('text')
         .remove();
 
-      gameV
+      gameAvV
         .attr({
           width: dashBoardWidth,
           height: dashBoardHeight
         })
         .append('g')
         .attr({
-          transform: 'translate(' + gameMargins.left + ',' + gameMargins.top + ')'
+          transform: 'translate(' + gameAvMargins.left + ',' + gameAvMargins.top + ')'
         });
       
-      gameV
+      gameAvV
         .selectAll('.x')
         .remove();
 
-      gameV
+      gameAvV
         .append('g')
         .attr({
           class: 'x axis',
-          transform: 'translate(' + gameMargins.left + ',' + (gameHeight + gameMargins.top) + ')'
+          transform: 'translate(' + gameAvMargins.left + ',' + (gameAvHeight + gameAvMargins.top) + ')'
         })
-        .call(xAxisGame);
+        .call(xAvAxisGame);
       
-      gameV
+      gameAvV
         .selectAll('.y')
         .remove();
 
-      gameV
+      gameAvV
         .append('g')
         .attr('class', 'y axis')
-        .attr('transform', 'translate(' + gameMargins.left + ',' + gameMargins.top + ')')
-        .call(yAxisGame)       
+        .attr('transform', 'translate(' + gameAvMargins.left + ',' + gameAvMargins.top + ')')
+        .call(yAvAxisGame)
         .append('text')
         .attr({
           x: -5,
-          y: yGame(10),
+          y: yAvGame(10),
           dy: '.71em',
         })
         .style({
@@ -629,84 +629,83 @@
         })
         .text('10');
 
-      var gameStats = gameV
+      var gameAvStats = gameAvV
         .selectAll('.barGame')
         .data(data, gamekey);
-      var gameStatLabels = gameV
+      var gameAvStatLabels = gameAvV
         .selectAll('.barGameLabel')
         .data(data, gamekey);
       
-      gameStats
+      gameAvStats
         .enter()
         .append('rect')
         .style('fill', nbaBlue)
         .attr({
-          x: function(d) { return xGame(d.text) + gameMargins.left; },
-          y: function(d) { return yGame(d.value) + gameMargins.top; },
-          width: xGame.rangeBand(),
-          height: function(d) { return gameHeight - yGame(d.value); },
+          x: function(d) { return xAvGame(d.text) + gameAvMargins.left; },
+          y: function(d) { return yAvGame(d.value) + gameAvMargins.top; },
+          width: xAvGame.rangeBand(),
+          height: function(d) { return gameAvHeight - yAvGame(d.value); },
           class: 'barGame',
         })
 
-      gameStatLabels
+      gameAvStatLabels
         .enter()
         .append('text')
         .attr({
-          x: function(d) { return xGame(d.text) + xGame.rangeBand() / 2 + gameMargins.left / 2 + (d.value > 10 ? 2 : 6); },
-          y: function(d) { return gameMargins.top + gameMargins.bottom; },
+          x: function(d) { return xAvGame(d.text) + xAvGame.rangeBand() / 2 + gameAvMargins.left / 2 + (d.value > 10 ? -4 : 0); },
+          y: function(d) { return gameAvMargins.top + gameAvMargins.bottom; },
           dy: '.35em',
           class: 'barGameLabel',
           'font-weight': 'bold',
         })
-        .text(function(d) { return d.value; });
+        .text(function(d) { return d.value.toFixed(1); });
 
-      gameV
+      gameAvV
         .append('line')
         .attr({
-          x1: gameMargins.left,
-          x2: dashBoardWidth - gameMargins.right,
-          y1: Math.floor(yGame(10)) + gameMargins.top,
-          y2: Math.floor(yGame(10)) + gameMargins.top,
+          x1: gameAvMargins.left,
+          x2: dashBoardWidth - gameAvMargins.right,
+          y1: Math.floor(yAvGame(10)) + gameAvMargins.top,
+          y2: Math.floor(yAvGame(10)) + gameAvMargins.top,
           stroke: nbaRed,
           'stroke-width': 2,
         });
-      gameV
+      gameAvV
         .append('text')
         .attr({
-          x: dashBoardWidth / 2 + gameMargins.left + gameMargins.right,
+          x: dashBoardWidth / 4.77 + gameAvMargins.left,
           y: 5,
           dy: '.35em',
-          width: dashBoardWidth,
         })
         .style({
           'font-weight': 'bold',
-          'text-anchor': 'end',
+          'text-anchor': 'start',
         })
         .text('В среднем за сезон');
 
-      gameStats
+      gameAvStats
         .exit()
         .remove();
-      gameStatLabels
+      gameAvStatLabels
         .exit()
         .remove();
     }
 
     // https://www.visualcinnamon.com/2013/09/making-d3-radar-chart-look-bit-better.html
     // https://gist.github.com/nbremer/6506614
-    var showAverage = function(gameA) {
-      var gameAvMargins = { left: 30, top: 20, right: 20, bottom: 20, };
-      var gameAvWidth = dashBoardWidth - gameAvMargins.left - gameAvMargins.right,
-          gameAvHeight = dashBoardHeight - gameAvMargins.top - gameAvMargins.bottom;
-      var dataAv = [
-        { text: 'Очки', value: gameA.points },
-        { text: 'Подборы', value: gameA.rebounds },
-        { text: 'Блокшоты', value: gameA.blocks },
-        { text: 'Перехваты', value: gameA.steals },
-        { text: 'Передачи', value: gameA.assists },
+    var showGame = function(game) {
+      var gameMargins = { left: 30, top: 20, right: 20, bottom: 20, };
+      var gameWidth = dashBoardWidth - gameMargins.left - gameMargins.right,
+          gameHeight = dashBoardHeight - gameMargins.top - gameMargins.bottom;
+      var data = [
+        { text: 'Очки', value: game.points },
+        { text: 'Подборы', value: game.rebounds },
+        { text: 'Блокшоты', value: game.blocks },
+        { text: 'Перехваты', value: game.steals },
+        { text: 'Передачи', value: game.assists },
       ];
       var webOptions = {
-        radius: dashBoardWidth / 2 - gameAvMargins.top - gameAvMargins.bottom,
+        radius: dashBoardWidth / 2 - gameMargins.top - gameMargins.bottom,
         levels: 4,
         width: dashBoardWidth,
         height: dashBoardHeight,
@@ -714,41 +713,41 @@
         factorLegend: 6 / 7,
         opacityArea: 0.3,
       };
-      var gameAvVis = d3.select('#web');
+      var gameVis = d3.select('#web');
 
-      gameAvVis
+      gameVis
         .selectAll('line')
         .remove();
-      gameAvVis
+      gameVis
         .selectAll('polygon')
         .remove();
-      gameAvVis
+      gameVis
         .selectAll('text')
         .remove();
-      gameAvVis
+      gameVis
         .attr({
           width: webOptions.width,
           height: webOptions.height,
         })
         .append('g')
         .attr({
-          transform: 'translate(' + gameAvMargins.left + ',' + gameAvMargins.top + ')',
+          transform: 'translate(' + gameMargins.left + ',' + gameMargins.top + ')',
         });
 
       for (var j = 0; j < webOptions.levels - 1; ++j) {
         var levelFactor = webOptions.radius * ((j + 1) / webOptions.levels);
         var toCenter = 'translate(' + (webOptions.width / 2 - levelFactor) + ', ' + (webOptions.height / 2 - levelFactor) + ')';
         //Circular segments
-        gameAvVis
+        gameVis
           .selectAll('.levels')
-          .data(dataAv, function(d) { return d.text + '' + j; })
+          .data(data, function(d) { return d.text + '' + j; })
           .enter()
           .append('line')
           .attr({
-            x1: function(d, i) { return levelFactor * (1 - Math.sin(i * webOptions.radians / dataAv.length)); },
-            y1: function(d, i) { return levelFactor * (1 - Math.cos(i * webOptions.radians / dataAv.length)); },
-            x2: function(d, i) { return levelFactor * (1 - Math.sin((i + 1) * webOptions.radians / dataAv.length)); },
-            y2: function(d, i) { return levelFactor * (1 - Math.cos((i + 1) * webOptions.radians / dataAv.length)); },
+            x1: function(d, i) { return levelFactor * (1 - Math.sin(i * webOptions.radians / data.length)); },
+            y1: function(d, i) { return levelFactor * (1 - Math.cos(i * webOptions.radians / data.length)); },
+            x2: function(d, i) { return levelFactor * (1 - Math.sin((i + 1) * webOptions.radians / data.length)); },
+            y2: function(d, i) { return levelFactor * (1 - Math.cos((i + 1) * webOptions.radians / data.length)); },
             class: 'line',
             transform: toCenter,
           })
@@ -758,7 +757,8 @@
             'stroke-width': '0.4px',
           });
 
-        gameAvVis.selectAll('.levels')
+        gameVis
+          .selectAll('.levels')
           .data([1]) //dummy data
           .enter()
           .append('text')
@@ -777,9 +777,9 @@
       }
 
       // legend with lines
-      var axis = gameAvVis
+      var axis = gameVis
         .selectAll('.axis')
-        .data(dataAv);
+        .data(data);
       var axisFactor = webOptions.radius * (webOptions.levels - 1) / webOptions.levels;
       var toCenter = 'translate(' + (webOptions.width / 2 - axisFactor) + ', ' + (webOptions.height / 2 - axisFactor) + ')';
 
@@ -791,10 +791,10 @@
       axis
         .append('line')
         .attr({
-          x1: webOptions.radius - gameAvMargins.left + 2,
-          y1: dashBoardHeight / 2 - gameAvMargins.top + 2,
-          x2: function(d, i) { return axisFactor * (1 - Math.sin(i * webOptions.radians / dataAv.length)); },
-          y2: function(d, i) { return axisFactor * (1 - Math.cos(i * webOptions.radians / dataAv.length)); },
+          x1: webOptions.radius - gameMargins.left + 2,
+          y1: dashBoardHeight / 2 - gameMargins.top + 2,
+          x2: function(d, i) { return axisFactor * (1 - Math.sin(i * webOptions.radians / data.length)); },
+          y2: function(d, i) { return axisFactor * (1 - Math.cos(i * webOptions.radians / data.length)); },
           class: 'line',
           transform: toCenter,
         })
@@ -803,14 +803,14 @@
           'stroke-width': '1.1px',
         });
 
-      var toCenter = 'translate(' + (webOptions.width / 2 - axisFactor) + ', ' + (webOptions.height / 2 - axisFactor - gameAvMargins.top / 2) + ')';
+      var toCenter = 'translate(' + (webOptions.width / 2 - axisFactor) + ', ' + (webOptions.height / 2 - axisFactor - gameMargins.top / 2) + ')';
       axis
         .append('text')
         .attr({
           x: function(d, i) { return axisFactor *
-            (1 - Math.sin(i * webOptions.radians / dataAv.length)) - 30 * Math.sin(i * webOptions.radians / dataAv.length); },
+            (1 - Math.sin(i * webOptions.radians / data.length)) - 30 * Math.sin(i * webOptions.radians / data.length); },
           y: function(d, i) { return axisFactor *
-            (1 - Math.cos(i * webOptions.radians / dataAv.length)) - 10 * Math.cos(i * webOptions.radians / dataAv.length); },
+            (1 - Math.cos(i * webOptions.radians / data.length)) - 10 * Math.cos(i * webOptions.radians / data.length); },
           class: 'legend',
           dy: '1.5em',
           transform: toCenter,
@@ -827,17 +827,17 @@
         .exit()
         .remove();
 
-      dataAv.forEach(function(d) {
+      data.forEach(function(d) {
         dataValues = [];
-        dataAv.forEach(function(di, i) {
+        data.forEach(function(di, i) {
           dataValues.push([
-            webOptions.width / 2 * (1 - (parseFloat(Math.max(di.value, 0)) / (10 * webOptions.levels)) * Math.sin(i * webOptions.radians / dataAv.length)), 
-            webOptions.height / 2 * (1 - (parseFloat(Math.max(di.value, 0)) / (10 * webOptions.levels)) * Math.cos(i * webOptions.radians / dataAv.length))
+            webOptions.width / 2 * (1 - (di.value / (10 * webOptions.levels)) * Math.sin(i * webOptions.radians / data.length)), 
+            webOptions.height / 2 * (1 - (di.value / (10 * webOptions.levels)) * Math.cos(i * webOptions.radians / data.length))
           ]);
         });
         dataValues.push(dataValues[0]);
 
-        gameAvVis
+        gameVis
           .selectAll('.area')
           .data([dataValues])
           .enter()
@@ -860,26 +860,26 @@
           })
           .on('mouseover', function () {
             z = 'polygon.' + d3.select(this).attr('class');
-            gameAvVis
+            gameVis
               .selectAll('polygon')
               .transition(200)
               .style('fill-opacity', 0.1); 
-            gameAvVis
+            gameVis
               .selectAll(z)
               .transition(200)
               .style('fill-opacity', .7);
           })
           .on('mouseout', function() {
-            gameAvVis
+            gameVis
               .selectAll('polygon')
               .transition(200)
               .style('fill-opacity', webOptions.opacityArea);
           });
       });
-      gameAvVis
+      gameVis
         .append('text')
         .attr({
-          x: gameAvMargins.left,
+          x: gameMargins.left,
           y: 5,
           dy: '.35em',
           width: dashBoardWidth,
@@ -888,7 +888,7 @@
           'font-weight': 'bold',
           'text-anchor': 'start',
         })
-        .text(gameA.name);
+        .text(game.name);
     }
 
     var gamekey = function(d) {
