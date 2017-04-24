@@ -693,19 +693,21 @@
 
     // https://www.visualcinnamon.com/2013/09/making-d3-radar-chart-look-bit-better.html
     // https://gist.github.com/nbremer/6506614
+    // http://bl.ocks.org/nbremer/6506614
     var showGame = function(game) {
       var gameMargins = { left: 30, top: 20, right: 20, bottom: 20, };
       var gameWidth = dashBoardWidth - gameMargins.left - gameMargins.right,
           gameHeight = dashBoardHeight - gameMargins.top - gameMargins.bottom;
       var data = [
-        { text: 'Очки', value: game.points },
-        { text: 'Подборы', value: game.rebounds },
-        { text: 'Блокшоты', value: game.blocks },
-        { text: 'Перехваты', value: game.steals },
-        { text: 'Передачи', value: game.assists },
+        { text: 'Очки', value: game.points, tooltipText: 'Очков' },
+        { text: 'Подборы', value: game.rebounds, tooltipText: 'Подборов' },
+        { text: 'Блокшоты', value: game.blocks, tooltipText: 'Блокшотов' },
+        { text: 'Перехваты', value: game.steals, tooltipText: 'Перехватов' },
+        { text: 'Передачи', value: game.assists, tooltipText: 'Передач' },
       ];
       var webOptions = {
         radius: dashBoardWidth / 2 - gameMargins.top - gameMargins.bottom,
+        circleRadius: 4,
         levels: 4,
         width: dashBoardWidth,
         height: dashBoardHeight,
@@ -724,6 +726,9 @@
         .remove();
       gameVis
         .selectAll('text')
+        .remove();
+      gameVis
+        .selectAll('.nodes')
         .remove();
       gameVis
         .attr({
@@ -758,6 +763,7 @@
             'stroke-width': '0.4px',
           });
 
+        // legend
         gameVis
           .selectAll('.levels')
           .data([1]) //dummy data
@@ -773,8 +779,8 @@
           .style({
             'font-family': 'sans-serif',
             'font-size': '10px',
-          })
-          .text(((j + 2) * webOptions.maxValue / webOptions.levels).toFixed(1));
+          });
+//          .text(((j + 1) * webOptions.maxValue / (webOptions.levels - 1)).toFixed(1));
       }
 
       // legend with lines
@@ -828,55 +834,107 @@
         .exit()
         .remove();
 
-      data.forEach(function(d) {
-        dataValues = [];
-        data.forEach(function(di, i) {
-          dataValues.push([
-            webOptions.width / 2 * (1 - (di.value / (10 * webOptions.levels)) * Math.sin(i * webOptions.radians / data.length)), 
-            webOptions.height / 2 * (1 - (di.value / (10 * webOptions.levels)) * Math.cos(i * webOptions.radians / data.length))
-          ]);
-        });
-        dataValues.push(dataValues[0]);
-
-        gameVis
-          .selectAll('.area')
-          .data([dataValues])
-          .enter()
-          .append('polygon')
-          .style({
-            'fill': okYellow,
-            'fill-opacity': webOptions.opacityArea,
-            'stroke': okYellow,
-            'stroke-width': '2px',
-          })
-          .attr({
-            'class': 'radar-chart-serie',
-            'points': function(di) {
-              var str = '';
-              for (var pti = 0; pti < di.length; ++pti) {
-                str = str + di[pti][0] + ',' + di[pti][1] + ' ';
-              }
-              return str;
-            }
-          })
-          .on('mouseover', function () {
-            z = 'polygon.' + d3.select(this).attr('class');
-            gameVis
-              .selectAll('polygon')
-              .transition(200)
-              .style('fill-opacity', 0.1); 
-            gameVis
-              .selectAll(z)
-              .transition(200)
-              .style('fill-opacity', .7);
-          })
-          .on('mouseout', function() {
-            gameVis
-              .selectAll('polygon')
-              .transition(200)
-              .style('fill-opacity', webOptions.opacityArea);
-          });
+      dataValues = [];
+      data.forEach(function(di, i) {
+        dataValues.push([
+          webOptions.width / 2 * (1 - (4/9 * di.value / webOptions.maxValue) * Math.sin(i * webOptions.radians / data.length)), 
+          webOptions.height / 2 * (1 - (2/3 * di.value / webOptions.maxValue) * Math.cos(i * webOptions.radians / data.length))
+        ]);
       });
+      dataValues.push(dataValues[0]);
+
+      gameVis
+        .selectAll('.radar-chart-serie')
+        .data([dataValues])
+        .enter()
+        .append('polygon')
+        .style({
+          'fill': okYellow,
+          'fill-opacity': webOptions.opacityArea,
+          'stroke': okYellow,
+          'stroke-width': '2px',
+        })
+        .attr({
+          'class': 'radar-chart-serie',
+          'points': function(di) {
+            var str = '';
+            for (var pti = 0; pti < di.length; ++pti) {
+              str = str + di[pti][0] + ',' + di[pti][1] + ' ';
+            }
+            return str;
+          }
+        })
+        .on('mouseover', function () {
+          z = 'polygon.' + d3.select(this).attr('class');
+          gameVis
+            .selectAll('polygon')
+            .transition(200)
+            .style('fill-opacity', 0.1); 
+          gameVis
+            .selectAll(z)
+            .transition(200)
+            .style('fill-opacity', .7);
+        })
+        .on('mouseout', function() {
+          gameVis
+            .selectAll('polygon')
+            .transition(200)
+            .style('fill-opacity', webOptions.opacityArea);
+        });
+
+      gameVis
+        .selectAll('.nodes')
+        .data(data)
+        .enter()
+        .append('svg:circle')
+        .attr({
+          class: 'nodes',
+          r: webOptions.circleRadius,
+          alt: function(di) { return di.value; },
+          cx: function(di, i) {
+            return webOptions.width / 2 * (1 - (4/9 * di.value / webOptions.maxValue) * Math.sin(i * webOptions.radians / data.length));
+          },
+          cy: function(di, i) {
+            return webOptions.height / 2 * (1 - (2/3 * di.value / webOptions.maxValue) * Math.cos(i * webOptions.radians / data.length));
+          },
+          'data-id': function(di) { return di.text },
+        })
+        .style({
+          fill: okYellow,
+          'fill-opacity': .9,
+        })
+        .on('mouseover', function (di) {
+          // newX =  parseFloat(d3.select(this).attr('cx')) - 10;
+          // newY =  parseFloat(d3.select(this).attr('cy')) - 5;
+          
+          // tooltip
+          //   .attr({
+          //     x: newX,
+          //     y: newY
+          //   })
+          //   .text(function () {  })
+          //   .transition(200)
+          //   .style('opacity', 1);
+            
+          z = "polygon." + d3.select(this).attr('class');
+          gameVis.selectAll("polygon")
+            .transition(200)
+            .style('fill-opacity', 0.1); 
+          gameVis.selectAll(z)
+            .transition(200)
+            .style('fill-opacity', .7);
+          })
+        .on('mouseout', function() {
+          tooltip
+            .transition(200)
+            .style('opacity', 0);
+          gameVis.selectAll('polygon')
+            .transition(200)
+            .style('fill-opacity', webOptions.opacityArea);
+          })
+        .append('svg:title')
+        .text(function(di) { return di.tooltipText + ': ' + di.value; });
+
       gameVis
         .append('text')
         .attr({
