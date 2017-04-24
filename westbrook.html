@@ -712,6 +712,7 @@
         radians: 2 * Math.PI,
         factorLegend: 6 / 7,
         opacityArea: 0.3,
+        maxValue: Math.max(game.points, game.rebounds, game.blocks, game.steals, game.assists),
       };
       var gameVis = d3.select('#web');
 
@@ -773,7 +774,7 @@
             'font-family': 'sans-serif',
             'font-size': '10px',
           })
-          .text(((j + 1) * 10).toFixed(1));
+          .text(((j + 2) * webOptions.maxValue / webOptions.levels).toFixed(1));
       }
 
       // legend with lines
