@@ -189,22 +189,7 @@
         .scale(xScale)
         .orient('bottom');
     }
-    var textByValue = function(number) {
-      if (number >= 11 && number <= 19) {
-        return 'трипл-даблов';
-      }
-      var mod = number % 10;
-      switch (mod) {
-        case 1:
-          return 'трипл-дабл';
-        case 2:
-        case 3:
-        case 4:
-          return 'трипл-дабла';
-        default:
-          return 'трипл-даблов';      
-      }
-    }
+
 
     var svg = d3
       .select('#timeline')
@@ -699,11 +684,11 @@
       var gameWidth = dashBoardWidth - gameMargins.left - gameMargins.right,
           gameHeight = dashBoardHeight - gameMargins.top - gameMargins.bottom;
       var data = [
-        { text: 'Очки', value: game.points, tooltipText: 'Очков' },
-        { text: 'Подборы', value: game.rebounds, tooltipText: 'Подборов' },
-        { text: 'Блокшоты', value: game.blocks, tooltipText: 'Блокшотов' },
-        { text: 'Перехваты', value: game.steals, tooltipText: 'Перехватов' },
-        { text: 'Передачи', value: game.assists, tooltipText: 'Передач' },
+        { text: 'Очки', value: game.points, tooltipText: pointsByValue },
+        { text: 'Подборы', value: game.rebounds, tooltipText: reboundsByValue },
+        { text: 'Блокшоты', value: game.blocks, tooltipText: blocksByValue },
+        { text: 'Перехваты', value: game.steals, tooltipText: stealsByValue },
+        { text: 'Передачи', value: game.assists, tooltipText: assistsByValue },
       ];
       var webOptions = {
         radius: dashBoardWidth / 2 - gameMargins.top - gameMargins.bottom,
@@ -886,7 +871,7 @@
         .selectAll('.nodes')
         .data(data)
         .enter()
-        .append('svg:circle')
+        .append('circle')
         .attr({
           class: 'nodes',
           r: webOptions.circleRadius,
@@ -932,8 +917,8 @@
             .transition(200)
             .style('fill-opacity', webOptions.opacityArea);
           })
-        .append('svg:title')
-        .text(function(di) { return di.tooltipText + ': ' + di.value; });
+        .append('title')
+        .text(function(di) { return di.value + ' ' + di.tooltipText(di.value); });
 
       gameVis
         .append('text')
@@ -1118,6 +1103,102 @@
       ];
       return result;
     };
+    var textByValue = function(number) {
+      if (number >= 11 && number <= 19) {
+        return 'трипл-даблов';
+      }
+      var mod = number % 10;
+      switch (mod) {
+        case 1:
+          return 'трипл-дабл';
+        case 2:
+        case 3:
+        case 4:
+          return 'трипл-дабла';
+        default:
+          return 'трипл-даблов';      
+      }
+    }
+    var pointsByValue = function(number) {
+      if (number >= 11 && number <= 19) {
+        return 'очков';
+      }
+      var mod = number % 10;
+      switch (mod) {
+        case 1:
+          return 'очко';
+        case 2:
+        case 3:
+        case 4:
+          return 'очка';
+        default:
+          return 'очков';      
+      }
+    }
+    var reboundsByValue = function(number) {
+      if (number >= 11 && number <= 19) {
+        return 'подборов';
+      }
+      var mod = number % 10;
+      switch (mod) {
+        case 1:
+          return 'подбор';
+        case 2:
+        case 3:
+        case 4:
+          return 'подбора';
+        default:
+          return 'подборов';      
+      }
+    }
+    var assistsByValue = function(number) {
+      if (number >= 11 && number <= 19) {
+        return 'передач';
+      }
+      var mod = number % 10;
+      switch (mod) {
+        case 1:
+          return 'передача';
+        case 2:
+        case 3:
+        case 4:
+          return 'передачи';
+        default:
+          return 'передач';      
+      }
+    }
+    var blocksByValue = function(number) {
+      if (number >= 11 && number <= 19) {
+        return 'блок-шотов';
+      }
+      var mod = number % 10;
+      switch (mod) {
+        case 1:
+          return 'блок-шот';
+        case 2:
+        case 3:
+        case 4:
+          return 'блок-шота';
+        default:
+          return 'блок-шотов';      
+      }
+    }
+    var stealsByValue = function(number) {
+      if (number >= 11 && number <= 19) {
+        return 'перехватов';
+      }
+      var mod = number % 10;
+      switch (mod) {
+        case 1:
+          return 'перехват';
+        case 2:
+        case 3:
+        case 4:
+          return 'перехвата';
+        default:
+          return 'перехватов';      
+      }
+    }
   </script>
 </body>
 </html>
