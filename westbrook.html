@@ -30,8 +30,9 @@
 
     .tooltip {
       position: absolute;
-      width: 150px;
-      height: 70px;
+      /*width: 450px;
+      height: 30px;*/
+      padding: 4px;
       pointer-events: none;
       background-color: white;
       stroke: black;
@@ -79,7 +80,7 @@
     }
 
     var getDateFormat = function(date) {
-      return date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate()
+      return date.getDate() + '.' + (date.getMonth() + 1) + '.' + date.getFullYear();
     }
     // http://colorbrewer2.org/
     var blues = {
@@ -415,7 +416,7 @@
           svg
             .append('text')
             .attr({
-              x: -margin.left / 3,
+              x: -4 - margin.left / 3,
               y: margin.top / 3,
               dy: '.35em',
               fill: 'white',
@@ -446,27 +447,28 @@
             .data(gamesData, function(d) { return d.name + d.date; });
           
           var ballsData = {
-            2: 'Первый игрок в истории НБА, набравший за 3 первых игры 100 + 30 + 30',
+            2: 'Первый игрок в истории НБА, набравший за 3 первых игры сезона 100 + 30 + 30',
             8: 'Самая длительная серия без трипл-даблов в сезоне (6 матчей подряд)',
             18: 'С этого момента статистика не опускается ниже трипл-дабла в среднем',
             22: 'Сделав 7 трипл-даблов подряд, догнал Оскара Робинсона и Майкла Джордана<br />' +
                 'Рекорд принадлежит Уилту Чемберлену (9 трипл-даблов подряд)',
             26: 'Набрано 820 очков (достаточно для 10 в среднем за сезон)',
-            58: 'Сделав 29й трипл-дабл за сезон, обошёл Майкла Джордана (за всю карьеру 28)',
+            58: 'Сделав 29й трипл-дабл за сезон, обошёл показатель Майкла Джордана за всю карьеру (28)',
             65: 'Вышел на второе место по количеству трипл-даблов за сезон (32), обойдя Уилта Чемберлена',
             70: 'Первый игрок в истории НБА, сделавший трипл-дабл, попав все, включая штрафные, броски в игре',
             73: 'Максимальное количество очков в игре с трипл-даблом (57)',
-            76: 'Первый игрок в истории НБА, сделавший две серии из 7 подряд трипл-даблов в одном сезоне' +
+            76: 'Первый игрок в истории НБА, сделавший две серии из 7 подряд трипл-даблов в одном сезоне<br />' +
                 'Набрано 820 подборов (достаточно для 10 в среднем за сезон)',
-            78: 'Набрано 820 передач, трипл-дабл в среднем за сезон обеспечен',
+            78: 'Набрано 820 передач, обеспечен трипл-дабл в среднем за сезон',
             79: 'Максимальное количество трипл-даблов за сезон в НБА (42)<br />' + 
                 'Максимальное количество трипл-даблов с 50 очками за сезон в НБА (3)<br />' +
                 'Вышел на 4 место по общему количеству трипл-даблов за карьеру (79), обойдя Уилта Чемберлена',
           };
 
+          var ballsDataMapped = Object.keys(ballsData).map(function (bd) { return bd; });
           var balls = svg
             .selectAll('.ball')
-            .data(Object.keys(ballsData).map(function (bd) { return bd; }));//, function(d) { return d.key; });
+            .data(ballsDataMapped);
           
           balls
             .enter()
@@ -477,11 +479,36 @@
               cy: -10,
               class: 'ball'
             });
-          
+
           balls
           .exit()
           .remove();
           
+          var ballLines = svg
+            .selectAll('.ballLine')
+            .data(ballsDataMapped);
+
+          ballLines
+            .enter()
+            .append('line')
+            .attr({
+              x1: function(di) { return xMap(gamesData[di]); },
+              y1: -5,
+              x2: function(di) { return xMap(gamesData[di]); },
+              y2: function(di) { return yMap(gamesData[di]) - 5; },
+              class: 'ballLine',
+            })
+            .style({
+              stroke: 'white',
+              'stroke-opacity': .75,
+              'stroke-width': '1.0px',
+              'stroke-dasharray': '5 5',
+            });
+
+          ballLines
+            .exit()
+            .remove();
+
           // scatter plot from here
           // http://bl.ocks.org/weiglemc/6185069
           foundGames
@@ -493,10 +520,16 @@
               cy: yMap,
               class: 'game',
               fill: cValue,
-              'fill-opacity': opacityValue
+              'fill-opacity': opacityValue,
+            })
+            .style({
+              stroke: function(di, j) { return j == 80 ? '#fff' : '#000'; },
             })
             .on('mouseover', function(d) {
               // http://stackoverflow.com/a/23703180/213550
+              d3
+                .selectAll('circle.game')
+                .style({ stroke: '#000' });
               d3
                 .select(this)
                 .style({ stroke: '#fff' });
@@ -505,26 +538,29 @@
               showGame(d);
               showGameToGo(d);
 
-              tooltip
-                .transition()
-                .duration(200)
-                .style({
-                  opacity: 1,
-                  stroke: '#fff',
-                });
-              tooltip
-                .html(d.name + ' (' + getDateFormat(d.date) + ')<br />' +
-                  '<br />В матче ' + d.points + '-' + d.rebounds + '-' + d.assists +
-                  '<br />Всего ' + d.totalPoints + '-' + d.totalRebounds + '-' + d.totalAssists)
-                .style({
-                  left: (d3.event.pageX + 5) + 'px',
-                  top: (d3.event.pageY - 28) + 'px'
-                });
+              var key = d.id - 1;
+              if (key in ballsData) {
+                tooltip
+                  .transition()
+                  .duration(200)
+                  .style({
+                    opacity: 1,
+                    stroke: '#fff',
+                  });
+                tooltip
+                  .html(ballsData[key]);
+
+                tooltip
+                  .style({
+                    left: (d3.event.pageX + (d.id > 40 ? -5 - tooltip.node().getBoundingClientRect().width : 5)) + 'px',
+                    top: (d3.event.pageY - 28) + 'px'
+                  });
+              }
             })
             .on('mouseout', function(d) {
-              d3
-                .select(this)
-                .style({ stroke: '#000' });
+              // d3
+              //   .select(this)
+              //   .style({ stroke: '#000' });
               tooltip
                 .transition()
                 .duration(500)
@@ -1015,6 +1051,20 @@
           'text-anchor': 'start',
         })
         .text(game.name);
+
+      gameVis
+        .append('text')
+        .attr({
+          x: gameMargins.left,
+          y: 25,
+          dy: '.35em',
+          width: dashBoardWidth,
+        })
+        .style({
+          'font-weight': 'bold',
+          'text-anchor': 'start',
+        })
+        .text(getDateFormat(game.date));
     }
 
     var gamekey = function(d) {
